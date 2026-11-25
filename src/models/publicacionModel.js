@@ -162,6 +162,20 @@ module.exports = {
     return rows[0] || null;
   },
 
+  // Quién consultó el contacto de una publicación (lo ve solo su dueño)
+  async consultas(publicacionId, duenoId) {
+    const { rows } = await db.query(
+      `SELECT u.id, u.nombre, COUNT(*)::int AS veces, MIN(v.fecha) AS primera, MAX(v.fecha) AS ultima,
+              EXISTS (SELECT 1 FROM resenas r WHERE r.autor_id = $2 AND r.receptor_id = u.id AND r.publicacion_id = $1) AS resenado
+         FROM vistas_contacto v JOIN usuarios u ON u.id = v.usuario_id
+        WHERE v.publicacion_id = $1
+        GROUP BY u.id
+        ORDER BY MAX(v.fecha) DESC`,
+      [publicacionId, duenoId]
+    );
+    return rows;
+  },
+
   async yaConsulto(publicacionId, usuarioId) {
     const { rowCount } = await db.query(
       'SELECT 1 FROM vistas_contacto WHERE publicacion_id = $1 AND usuario_id = $2 LIMIT 1',

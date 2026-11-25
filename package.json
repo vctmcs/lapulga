@@ -1,6 +1,6 @@
 {
   "name": "lapulga",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "La Pulga: marketplace de artículos usados y donaciones con moderación por IA",
   "main": "server.js",
   "type": "commonjs",
@@ -8,7 +8,8 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "db:setup": "node database/setup.js",
-    "ia:probar": "node scripts/probar-ia.js"
+    "ia:probar": "node scripts/probar-ia.js",
+    "db:demo": "node scripts/demo.js"
   },
   "engines": {
     "node": ">=20"

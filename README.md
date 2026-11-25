@@ -23,7 +23,7 @@ Marketplace web de artículos usados y donaciones con moderación asistida por I
 ## Reglas de negocio
 
 - **Precio obligatorio.** El campo no puede quedar vacío; si vale 0 la publicación se muestra como «Donación / Gratis».
-- **Contacto protegido.** Teléfono y WhatsApp solo se entregan a usuarios con sesión iniciada, y cada consulta se guarda en `vistas_contacto`.
+- **Contacto protegido.** Teléfono y WhatsApp solo se entregan a usuarios con sesión iniciada, y cada consulta se guarda en `vistas_contacto`. El vendedor ve quién consultó cada publicación.
 - **Moderación con revisión humana.** La IA no bloquea por sí sola: marca, oculta y envía a revisión. Con 3 strikes la cuenta se bloquea.
 
 ## Instalación
@@ -41,6 +41,7 @@ Edita `.env` con tu usuario y contraseña de PostgreSQL. Después:
 
 ```bash
 npm run db:setup   # crea la base "lapulga", las tablas, las categorías y el administrador
+npm run db:demo    # opcional: usuarios, publicaciones con fotos, reseñas y casos de moderación de prueba
 npm run ia:probar  # opcional: descarga el modelo de texto (~560 MB, solo la primera vez) y prueba los filtros
 npm run dev        # http://localhost:3000
 ```
@@ -48,6 +49,8 @@ npm run dev        # http://localhost:3000
 Si el servidor no arranca, el mensaje en consola indica la causa: contraseña de PostgreSQL incorrecta en `.env`, base de datos sin crear o servicio detenido.
 
 El administrador inicial usa `ADMIN_EMAIL` y `ADMIN_PASSWORD` del archivo `.env`.
+
+Los datos de prueba crean seis cuentas con la contraseña `demo1234`: `lucia`, `jorge`, `marisol` y `beto` (vendedores) y `daniel` y `karla` (compradores), todas con el dominio `@demo.lapulga.mx`. `npm run db:demo -- --reset` los borra y los vuelve a crear sin tocar los datos reales.
 
 ## Moderación con IA
 

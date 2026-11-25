@@ -30,6 +30,7 @@ r.post('/publicaciones/:id/reportar', requiereSesion, pubs.reportar);
 r.get('/mis-publicaciones', requiereRol('vendedor'), pubs.mias);
 r.post('/publicaciones', requiereRol('vendedor'), imagenesPublicacion, pubs.crear);
 r.get('/publicaciones/:id/editar', requiereRol('vendedor'), pubs.editar);
+r.get('/publicaciones/:id/consultas', requiereRol('vendedor'), pubs.consultas);
 r.post('/publicaciones/:id/editar', requiereRol('vendedor'), imagenesPublicacion, pubs.actualizar);
 r.post('/publicaciones/:id/vendida', requiereRol('vendedor'), pubs.marcarVendida);
 r.post('/publicaciones/:id/eliminar', requiereRol('vendedor'), pubs.eliminar);

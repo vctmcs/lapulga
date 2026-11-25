@@ -142,6 +142,13 @@ module.exports = {
     res.render('publicaciones/mias', { titulo: 'Mis publicaciones', publicaciones });
   },
 
+  async consultas(req, res) {
+    const pub = await propiaOFalla(req, res);
+    if (!pub) return;
+    const consultas = await Publicacion.consultas(pub.id, req.usuario.id);
+    res.render('publicaciones/consultas', { titulo: 'Consultas de contacto', pub, consultas });
+  },
+
   async nueva(req, res) {
     if (!req.usuario.puede_publicar) {
       req.flash('error', 'Tienes una publicación en revisión. Podrás publicar cuando el administrador la revise.');

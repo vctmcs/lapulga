@@ -1,0 +1,28 @@
+<%- include('../partials/head') %>
+
+<p class="migas"><a href="/mis-publicaciones">mis publicaciones</a> &raquo; consultas</p>
+<h1>quién vio tu contacto</h1>
+<p>
+  Publicación: <a href="/publicaciones/<%= pub.id %>"><%= pub.titulo %></a>
+  &middot; <span class="<%= pub.es_donacion ? 'dona' : 'precio' %>"><%= f.precio(pub.precio) %></span>
+</p>
+<p class="gris chico sans">Cada vez que un usuario registrado pulsa «ver teléfono y WhatsApp» queda anotado aquí. A estas personas también las puedes calificar como compradores.</p>
+
+<% if (!consultas.length) { %>
+  <p class="gris">Nadie ha consultado tu contacto todavía.</p>
+<% } else { %>
+  <table class="tabla">
+    <tr><th>usuario</th><th class="num">veces</th><th>primera vez</th><th>última vez</th><th>reseña</th></tr>
+    <% consultas.forEach(c => { %>
+      <tr>
+        <td><a href="/usuarios/<%= c.id %>"><%= c.nombre %></a></td>
+        <td class="num"><%= c.veces %></td>
+        <td class="chico"><%= f.hace(c.primera) %></td>
+        <td class="chico"><%= f.hace(c.ultima) %></td>
+        <td class="chico"><% if (c.resenado) { %>ya lo calificaste<% } else { %><a href="/resenas/nueva?publicacion=<%= pub.id %>&receptor=<%= c.id %>">calificar</a><% } %></td>
+      </tr>
+    <% }) %>
+  </table>
+<% } %>
+
+<%- include('../partials/foot') %>

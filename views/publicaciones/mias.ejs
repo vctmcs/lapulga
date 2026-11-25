@@ -29,7 +29,7 @@
           <% const colores = { publicada: '#000', en_revision: '#e00000', rechazada: '#e00000', vendida: '#666' }; %>
           <span style="color:<%= colores[p.estado] %>"><%= f.ESTADOS[p.estado].toLowerCase() %></span>
         </td>
-        <td class="num"><%= p.consultas %></td>
+        <td class="num"><% if (p.consultas) { %><a href="/publicaciones/<%= p.id %>/consultas"><%= p.consultas %></a><% } else { %>0<% } %></td>
         <td class="chico">
           <% if (p.estado === 'publicada' || p.estado === 'vendida') { %>
             <a href="/publicaciones/<%= p.id %>/editar">editar</a> &middot;
