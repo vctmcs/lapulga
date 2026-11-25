@@ -24,7 +24,7 @@ const EJEMPLOS = [
   }
 
   console.log(`\n== Filtro 2: zero-shot (${zeroShot.MODELO}, umbral ${zeroShot.UMBRAL}) ==`);
-  console.log('La primera vez descarga el modelo (unos 300 MB). Espera…');
+  console.log('La primera vez descarga el modelo (unos 560 MB). Espera…');
   for (const t of EJEMPLOS) {
     const { hallazgos, puntajes } = await zeroShot.analizar(t);
     const top = Object.entries(puntajes).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([k, v]) => `${k} ${v.toFixed(2)}`).join(', ');

@@ -41,7 +41,7 @@ Edita `.env` con tu usuario y contraseña de PostgreSQL. Después:
 
 ```bash
 npm run db:setup   # crea la base "lapulga", las tablas, las categorías y el administrador
-npm run ia:probar  # opcional: descarga el modelo de texto (~300 MB, solo la primera vez) y prueba los filtros
+npm run ia:probar  # opcional: descarga el modelo de texto (~560 MB, solo la primera vez) y prueba los filtros
 npm run dev        # http://localhost:3000
 ```
 
@@ -56,7 +56,7 @@ Cada publicación nueva o editada pasa por tres filtros antes de mostrarse:
 | Filtro | Herramienta | Marca cuando |
 |---|---|---|
 | 1. Términos prohibidos | Lista propia (`src/services/ia/terminos.js`) | Aparece un término o sinónimo de armas, drogas, trata de personas, servicios sexuales u otros ilícitos. Detecta acentos, mayúsculas, l3tr4s cambiadas y palabras deletreadas, e ignora frases legítimas como "pistola de silicón". |
-| 2. Texto zero-shot | Transformers.js con `Xenova/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7` | Una categoría prohibida supera `UMBRAL_TEXTO` y además le gana a "artículo usado común". |
+| 2. Texto zero-shot | Transformers.js con `Xenova/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7` en fp16 (la versión q8 pierde casi toda su precisión) | Una categoría prohibida supera `UMBRAL_TEXTO` y además le gana a "artículo usado común". |
 | 3. Imágenes | NSFWJS (MobileNetV2) | Porn + Hentai supera `UMBRAL_NSFW`, o Sexy supera `UMBRAL_SEXY`. |
 
 Si algún filtro marca la publicación, se guarda en `reportes_ia`, la publicación queda «oculta – en revisión» y el usuario no puede publicar hasta que el administrador decida:

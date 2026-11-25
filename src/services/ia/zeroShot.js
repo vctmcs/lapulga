@@ -3,16 +3,18 @@
 const path = require('path');
 
 const MODELO = process.env.MODELO_ZERO_SHOT || 'Xenova/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7';
-const UMBRAL = Number(process.env.UMBRAL_TEXTO || 0.85);
+// fp16: la versión cuantizada (q8) de mDeBERTa pierde casi toda su precisión, por eso no se usa
+const DTYPE = process.env.MODELO_DTYPE || 'fp16';
+const UMBRAL = Number(process.env.UMBRAL_TEXTO || 0.97);
 const PLANTILLA = 'Este anuncio trata sobre {}.';
 
 // clave interna → frase que el modelo compara con el anuncio
 const ETIQUETAS = {
   armas: 'la venta de armas o municiones',
   drogas: 'la venta de drogas o sustancias ilegales',
-  servicios_sexuales: 'ofrecer servicios sexuales o contenido sexual',
-  trata_de_personas: 'la venta de personas, bebés u órganos',
-  otros_ilicitos: 'la venta de artículos robados, falsificados o documentos falsos',
+  servicios_sexuales: 'ofrecer servicios sexuales',
+  trata_de_personas: 'la venta de personas o bebés',
+  otros_ilicitos: 'la venta de artículos robados',
   normal: 'la venta o donación de un artículo usado común',
 };
 const PROHIBIDAS = Object.keys(ETIQUETAS).filter((k) => k !== 'normal');
@@ -25,8 +27,8 @@ function cargar() {
       const { pipeline, env } = require('@huggingface/transformers');
       env.cacheDir = path.join(__dirname, '..', '..', '..', '.modelos');
       const t0 = Date.now();
-      const clasificador = await pipeline('zero-shot-classification', MODELO, { dtype: 'q8' });
-      console.log(`[IA] Modelo de texto listo (${MODELO}) en ${((Date.now() - t0) / 1000).toFixed(1)} s`);
+      const clasificador = await pipeline('zero-shot-classification', MODELO, { dtype: DTYPE });
+      console.log(`[IA] Modelo de texto listo (${MODELO}, ${DTYPE}) en ${((Date.now() - t0) / 1000).toFixed(1)} s`);
       return clasificador;
     })().catch((err) => {
       cargando = null; // permite reintentar en la siguiente publicación
