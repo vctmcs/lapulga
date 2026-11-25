@@ -2,6 +2,8 @@ const bcrypt = require('bcryptjs');
 const Usuario = require('../models/usuarioModel');
 const Publicacion = require('../models/publicacionModel');
 const validar = require('../utils/validacion');
+const Resena = require('../models/resenaModel');
+const { MOTIVOS } = require('./resenasController');
 
 module.exports = {
   // Perfil público de cualquier usuario
@@ -11,11 +13,18 @@ module.exports = {
     if (!perfil || perfil.bloqueado || perfil.rol === 'admin') {
       return res.status(404).render('error', { titulo: 'No encontrado', codigo: 404, mensaje: 'Este perfil no existe.' });
     }
-    const publicaciones = perfil.rol === 'vendedor' ? await Publicacion.delUsuario(id, { soloPublicadas: true }) : [];
+    const [publicaciones, promedios, resenas] = await Promise.all([
+      perfil.rol === 'vendedor' ? Publicacion.delUsuario(id, { soloPublicadas: true }) : [],
+      Resena.promedios(id),
+      Resena.delReceptor(id),
+    ]);
     res.render('perfil/ver', {
       titulo: perfil.nombre,
       perfil,
       publicaciones,
+      promedios,
+      resenas,
+      motivos: MOTIVOS,
       esPropio: req.usuario && req.usuario.id === perfil.id,
     });
   },

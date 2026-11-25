@@ -6,7 +6,7 @@ Marketplace web de artículos usados y donaciones con moderación asistida por I
 
 - Node.js 20+ con Express 5
 - PostgreSQL
-- EJS como motor de vistas, CSS y JavaScript propios (sin frameworks de interfaz), estilo deliberadamente simple
+- EJS como motor de vistas, CSS y JavaScript propios (sin frameworks de interfaz), con un diseño simple al estilo de las páginas de los 90
 - Multer para la subida de imágenes
 - express-session con sesiones guardadas en PostgreSQL (connect-pg-simple)
 - IA gratuita y local: lista de términos prohibidos, Transformers.js (zero-shot) y NSFWJS con TensorFlow.js + sharp
@@ -68,6 +68,14 @@ Los usuarios también pueden reportar publicaciones visibles, y el administrador
 
 Los filtros 2 y 3 se pueden apagar con `IA_TEXTO=0` o `IA_IMAGEN=0` en `.env`. Si un modelo falla, el error se registra en consola y la lista de términos sigue funcionando.
 
+## Reseñas
+
+- Calificación de 1 a 5 estrellas y comentario opcional.
+- Solo se puede reseñar a alguien con quien hubo contacto: el comprador califica al vendedor cuyo teléfono consultó, y el vendedor al comprador que consultó el suyo (`vistas_contacto`).
+- Una reseña por par de usuarios y publicación, editable durante 7 días.
+- El perfil muestra el promedio y el número de reseñas por separado: como vendedor y como comprador.
+- El comentario pasa por los mismos filtros de texto que las publicaciones; si se marca, queda oculto en revisión. Cualquier usuario puede reportar una reseña. Si el administrador confirma, la reseña se elimina y su autor recibe un strike.
+
 ## Estructura
 
 ```
@@ -98,7 +106,8 @@ lapulga/
 | imagenes          | id, publicacion_id, ruta, orden                                                           |
 | reportes_ia       | id, publicacion_id, filtro, etiqueta, puntaje, decision_admin, admin_id, fecha, reportado_por, motivo |
 | vistas_contacto   | id, publicacion_id, usuario_id, fecha                                                     |
-| resenas           | id, autor_id, receptor_id, publicacion_id, rol_receptor, calificacion, comentario, fecha  |
+| resenas           | id, autor_id, receptor_id, publicacion_id, rol_receptor, calificacion, comentario, estado, fecha |
+| reportes_resenas  | id, resena_id, filtro, etiqueta, puntaje, reportado_por, motivo, decision_admin, admin_id, fecha |
 
 `es_donacion` es una columna calculada (`precio = 0`), así nunca puede quedar desincronizada del precio.
 
@@ -106,4 +115,4 @@ lapulga/
 
 - [x] **Entrega 1.** Estructura MVC, esquema completo, registro e inicio de sesión con roles, publicaciones con hasta 5 imágenes, búsqueda y filtros, regla de precio/donación, contacto protegido con registro de consultas, perfiles públicos y cuenta.
 - [x] **Entrega 2.** Moderación por IA (términos prohibidos, Transformers.js zero-shot, NSFWJS), cola de revisión, strikes y bloqueo, reportes de usuarios, historial, métricas de precisión y gestión de usuarios. Estilo visual simplificado.
-- [ ] **Entrega 3.** Reseñas entre usuarios (1 a 5 estrellas, solo tras consultar el contacto, editables 7 días, promedio como vendedor y como comprador).
+- [x] **Entrega 3.** Reseñas entre usuarios (1 a 5 estrellas, solo tras consultar el contacto, editables 7 días, promedio como vendedor y como comprador), moderación de reseñas, página de reglas y nuevo diseño.

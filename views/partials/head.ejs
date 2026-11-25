@@ -3,52 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= titulo ? `${titulo} - La Pulga` : 'La Pulga' %></title>
+  <title><%= titulo ? `${titulo} - la pulga` : 'la pulga' %></title>
   <meta name="description" content="La Pulga: compra, vende y dona artículos usados. Contacto directo por teléfono o WhatsApp.">
   <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
-<div class="pagina">
+<div class="marco">
 
-<div class="cabecera">
-  <a class="logo" href="/"><b>la pulga</b><span>artículos usados y donaciones</span></a>
-
-  <div class="menu">
-    <a href="/">inicio</a> <span class="sep">|</span>
-    <a href="/?donacion=si">donaciones</a> <span class="sep">|</span>
-    <% if (!usuario) { %>
-      <a href="/login">entrar</a> <span class="sep">|</span>
-      <a href="/registro">registrarse</a> <span class="sep">|</span>
-      <a href="/registro?rol=vendedor">vender</a>
-    <% } else { %>
-      <% if (usuario.rol === 'vendedor') { %>
-        <a href="/publicaciones/nueva">publicar</a> <span class="sep">|</span>
-        <a href="/mis-publicaciones">mis publicaciones</a> <span class="sep">|</span>
-      <% } %>
-      <% if (usuario.rol === 'admin') { %>
-        <a href="/admin">moderación</a><% if (typeof pendientes !== 'undefined' && pendientes) { %> <a class="contador" href="/admin" title="casos pendientes"><%= pendientes %></a><% } %> <span class="sep">|</span>
-      <% } %>
-      <a href="/cuenta">mi cuenta</a> <span class="sep">|</span>
-      <form class="enlinea" action="/logout" method="post"><button class="enlace" type="submit" style="font-size:12px">salir</button></form>
-      <br><small class="gris">sesión: <%= usuario.nombre %> (<%= usuario.rol %>)</small>
+<nav class="lateral" aria-label="Menú">
+  <a href="/">hoy</a>
+  <a href="/?donacion=si">donaciones</a>
+  <a href="/?donacion=no">en venta</a>
+  <% if (!usuario) { %>
+    <a href="/registro?rol=vendedor">vender</a>
+    <a href="/login">entrar</a>
+    <a href="/registro">registro</a>
+  <% } else { %>
+    <% if (usuario.rol === 'vendedor') { %>
+      <a href="/publicaciones/nueva">publicar</a>
+      <a href="/mis-publicaciones">mis cosas</a>
     <% } %>
+    <% if (usuario.rol !== 'admin') { %>
+      <a href="/resenas">reseñas<% if (typeof porResenar !== 'undefined' && porResenar) { %> <span class="contador"><%= porResenar %></span><% } %></a>
+    <% } %>
+    <% if (usuario.rol === 'admin') { %>
+      <a href="/admin">moderación<% if (typeof pendientes !== 'undefined' && pendientes) { %> <span class="contador"><%= pendientes %></span><% } %></a>
+    <% } %>
+    <a href="/cuenta">mi cuenta</a>
+  <% } %>
+  <a href="/ayuda">reglas</a>
+  <% if (usuario) { %>
+    <form action="/logout" method="post"><button type="submit">salir</button></form>
+    <div class="sesion"><%= usuario.nombre %><br>(<%= usuario.rol %>)</div>
+  <% } %>
+</nav>
+
+<div class="contenido">
+<div class="columna">
+
+<% if (typeof esPortada !== 'undefined' && esPortada) { %>
+  <div class="portada">
+    <svg viewBox="0 0 160 200" role="img" aria-label="Dibujo de una etiqueta de precio antigua colgando de un hilo">
+      <path d="M80 4 C70 22 92 30 80 52" fill="none" stroke="#6b4e2e" stroke-width="2.4"/>
+      <circle cx="80" cy="4" r="3.4" fill="#6b4e2e"/>
+      <g transform="rotate(-14 80 120)">
+        <path d="M44 66 L80 46 L116 66 L116 186 L44 186 Z" fill="#e9d8b4" stroke="#6b4e2e" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M50 72 L80 55 L110 72 L110 180 L50 180 Z" fill="none" stroke="#a88a5c" stroke-width="1" stroke-dasharray="3 3"/>
+        <circle cx="80" cy="66" r="7" fill="#fff" stroke="#6b4e2e" stroke-width="2.2"/>
+        <text x="80" y="118" text-anchor="middle" font-family="Georgia, serif" font-size="30" fill="#8b2a1c" font-style="italic">$</text>
+        <text x="80" y="142" text-anchor="middle" font-family="Georgia, serif" font-size="13" fill="#4a3520" letter-spacing="1">SE VENDE</text>
+        <line x1="58" y1="152" x2="102" y2="152" stroke="#a88a5c" stroke-width="1"/>
+        <text x="80" y="169" text-anchor="middle" font-family="Georgia, serif" font-size="11" fill="#4a3520" font-style="italic">o se regala</text>
+      </g>
+    </svg>
+    <div class="portada__texto">
+      <div class="portada__web">www.lapulga.mx</div>
+      <div class="portada__lema">Lo que a ti te sobra,<br>a alguien le hace falta</div>
+      <div class="portada__desde">USADOS Y DONACIONES DESDE 2026</div>
+      <div class="portada__extra">Sin comisiones, sin chat</div>
+    </div>
   </div>
-
-  <form class="buscar" action="/" method="get" role="search">
-    <label class="sr-only" for="buscar">Buscar</label>
-    <input id="buscar" type="search" name="q" maxlength="80" placeholder="buscar..." value="<%= typeof query !== 'undefined' && query.q ? query.q : '' %>">
-    <button type="submit">buscar</button>
-  </form>
-</div>
-
+  <div class="titulo-sitio"><a href="/">la pulga dot mx</a><small>Un mercado de artículos usados y donaciones</small></div>
+<% } else { %>
+  <div class="titulo-sitio titulo-chico"><a href="/">la pulga</a><small>artículos usados y donaciones</small></div>
+<% } %>
 <hr>
 
 <% if (usuario && usuario.rol === 'vendedor' && !usuario.puede_publicar) { %>
   <div class="msg msg-alerta">Una de tus publicaciones fue reportada y está oculta en revisión. No puedes publicar hasta que el administrador la revise.</div>
 <% } %>
 <% (flash || []).forEach(m => { %>
-  <div class="msg msg-<%= m.tipo %>" role="status"><button type="button" data-cerrar aria-label="cerrar">x</button><%= m.mensaje %></div>
+  <div class="msg msg-<%= m.tipo %>" role="status"><button type="button" data-cerrar aria-label="cerrar">&times;</button><%= m.mensaje %></div>
 <% }) %>
 
 <main id="contenido">

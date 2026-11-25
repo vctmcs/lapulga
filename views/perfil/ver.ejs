@@ -1,27 +1,60 @@
 <%- include('../partials/head') %>
 
 <h1><%= perfil.nombre %></h1>
-<p class="gris">
+<p class="gris sans chico" style="margin:0">
   <%= perfil.rol %> &middot; en la pulga desde <%= f.fecha(perfil.creado_en) %>
-  <% if (perfil.rol === 'vendedor') { %>
-    &middot; <%= perfil.activas %> <%= perfil.activas === 1 ? 'publicación activa' : 'publicaciones activas' %>
-    <% if (perfil.donaciones) { %>&middot; <span class="dona"><%= perfil.donaciones %> en donación</span><% } %>
-  <% } %>
+  <% if (perfil.rol === 'vendedor') { %>&middot; <%= perfil.activas %> <%= perfil.activas === 1 ? 'publicación activa' : 'publicaciones activas' %><% if (perfil.donaciones) { %>, <span class="dona" style="font-size:13px"><%= perfil.donaciones %> en donación</span><% } %><% } %>
   <% if (esPropio) { %>&middot; <a href="/cuenta">editar mi cuenta</a><% } %>
 </p>
-<p class="chico gris">Las reseñas de este usuario estarán disponibles pronto.</p>
+
+<div class="promedios">
+  <% [['vendedor', 'como vendedor'], ['comprador', 'como comprador']].forEach(([k, txt]) => { const p = promedios[k]; %>
+    <div>
+      <%= txt %>:
+      <% if (p.total) { %>
+        <b><%= p.promedio.toFixed(1) %></b> <%- include('../partials/estrellas', { n: p.promedio }) %>
+        <span class="gris">(<%= p.total %> <%= p.total === 1 ? 'reseña' : 'reseñas' %>)</span>
+      <% } else { %><span class="gris">sin reseñas</span><% } %>
+    </div>
+  <% }) %>
+</div>
 <hr>
 
 <% if (perfil.rol === 'vendedor') { %>
+  <h2>publicaciones</h2>
   <% if (publicaciones.length) { %>
     <div class="lista">
       <% publicaciones.forEach(p => { %><%- include('../partials/tarjeta', { p }) %><% }) %>
     </div>
   <% } else { %>
-    <p class="centro gris">No tiene publicaciones activas por ahora.</p>
+    <p class="gris">No tiene publicaciones activas por ahora.</p>
   <% } %>
-<% } else { %>
-  <p class="centro gris">Los compradores no tienen publicaciones.</p>
+  <hr>
 <% } %>
+
+<h2>reseñas</h2>
+<% if (!resenas.length) { %>
+  <p class="gris">Todavía nadie ha reseñado a <%= perfil.nombre.split(' ')[0] %>.</p>
+<% } %>
+<% resenas.forEach(r => { %>
+  <div class="resena">
+    <div class="cab">
+      <%- include('../partials/estrellas', { n: r.calificacion }) %>
+      <b><a href="/usuarios/<%= r.autor_id %>"><%= r.autor %></a></b>
+      <span class="gris">· como <%= r.rol_receptor %> · por «<%= r.titulo %>» · <%= f.fecha(r.fecha) %><%= r.editada_en ? ' (editada)' : '' %></span>
+    </div>
+    <% if (r.comentario) { %><p style="margin:4px 0 0"><%= r.comentario %></p><% } %>
+    <% if (usuario && usuario.id !== r.autor_id && usuario.rol !== 'admin') { %>
+      <details class="chico" style="margin-top:3px">
+        <summary class="gris" style="cursor:pointer">reportar</summary>
+        <form action="/resenas/<%= r.id %>/reportar" method="post" style="margin-top:4px">
+          <select name="motivo"><% Object.entries(motivos).forEach(([k, v]) => { %><option value="<%= k %>"><%= v %></option><% }) %></select>
+          <input name="detalle" maxlength="300" placeholder="detalle (opcional)">
+          <button type="submit">enviar</button>
+        </form>
+      </details>
+    <% } %>
+  </div>
+<% }) %>
 
 <%- include('../partials/foot') %>

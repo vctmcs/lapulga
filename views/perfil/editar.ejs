@@ -4,7 +4,7 @@
 <h1 class="centro">Mi cuenta</h1>
 <p class="centro gris">
   <%= usuario.email %> &middot; cuenta de <%= usuario.rol === 'admin' ? 'administrador' : usuario.rol %> desde <%= f.fecha(usuario.creado_en) %>
-  <% if (usuario.strikes > 0) { %><br><span style="color:#ff5236">strikes: <%= usuario.strikes %> de 3</span><% } %>
+  <% if (usuario.strikes > 0) { %><br><span style="color:#e00000">strikes: <%= usuario.strikes %> de 3</span><% } %>
 </p>
 
 <h2 class="centro">Datos de contacto</h2>
@@ -33,7 +33,7 @@
         <% if (errores.whatsapp) { %><span class="error"><%= errores.whatsapp %></span><% } %>
       </td>
     </tr>
-    <tr><td></td><td><button type="submit" class="amarillo">guardar</button></td></tr>
+    <tr><td></td><td><button type="submit" class="rojo">guardar</button></td></tr>
   </table>
 </form>
 

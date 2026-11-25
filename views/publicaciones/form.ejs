@@ -54,7 +54,7 @@
               <label class="foto">
                 <input type="checkbox" name="quitar_imagen" value="<%= img.id %>" <%= marcadas.includes(String(img.id)) ? 'checked' : '' %> style="display:none">
                 <img src="/uploads/<%= img.ruta %>" alt="foto <%= i + 1 %>">
-                <%= i === 0 ? 'portada · ' : '' %><span style="text-decoration:underline;cursor:pointer;color:#ff5236">quitar</span>
+                <%= i === 0 ? 'portada · ' : '' %><span style="text-decoration:underline;cursor:pointer;color:#e00000">quitar</span>
               </label>
             <% }) %>
           </div>
@@ -73,7 +73,7 @@
       <td></td>
       <td>
         <p class="chico gris">Al publicar, el texto y las fotos pasan por una revisión automática. Si algo parece prohibido, la publicación se oculta hasta que un administrador la revise y no podrás publicar mientras tanto.</p>
-        <button type="submit" class="amarillo" data-enviar><%= pub ? 'guardar cambios' : 'publicar' %></button>
+        <button type="submit" class="rojo" data-enviar><%= pub ? 'guardar cambios' : 'publicar' %></button>
         &nbsp; <a href="<%= pub ? '/publicaciones/' + pub.id : '/mis-publicaciones' %>">cancelar</a>
       </td>
     </tr>

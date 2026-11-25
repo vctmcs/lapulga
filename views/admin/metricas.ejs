@@ -36,6 +36,16 @@
 </table>
 <p class="chico gris">Una misma publicación puede tener detecciones de varios filtros, por eso las cifras por filtro suman más que las de publicaciones.</p>
 
+<h2>Reseñas</h2>
+<table class="tabla">
+  <tr><th>origen</th><th class="num">detecciones</th><th class="num">confirmadas</th><th class="num">descartadas</th><th class="num">pendientes</th><th class="num">precisión</th></tr>
+  <% ['terminos', 'texto_zero_shot', 'usuario'].forEach(k => {
+       const r = mResenas.find(x => x.filtro === k) || { total: 0, confirmadas: 0, descartadas: 0, pendientes: 0 };
+       const p = r.confirmadas + r.descartadas ? r.confirmadas / (r.confirmadas + r.descartadas) : null; %>
+    <tr><td><%= filtros[k] %></td><td class="num"><%= r.total %></td><td class="num"><%= r.confirmadas %></td><td class="num"><%= r.descartadas %></td><td class="num"><%= r.pendientes %></td><td class="num"><%= pct(p) %></td></tr>
+  <% }) %>
+</table>
+
 <h2>Usuarios</h2>
 <p><%= m.usuarios.con_strikes %> con strikes &middot; <%= m.usuarios.bloqueados %> bloqueados &middot; <%= m.usuarios.sin_permiso %> sin permiso de publicar (en revisión) &middot; <a href="/admin/usuarios">ver lista</a></p>
 

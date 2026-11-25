@@ -85,7 +85,7 @@ module.exports = {
       Categoria.todas(),
     ]);
     const hayFiltros = Boolean(filtros.q || filtros.categoria || filtros.donacion);
-    res.render('home', { titulo: 'Inicio', filtros, categorias, hayFiltros, ...resultado });
+    res.render('home', { titulo: '', filtros, categorias, hayFiltros, esPortada: !hayFiltros && filtros.pagina === 1, ...resultado });
   },
 
   async detalle(req, res) {

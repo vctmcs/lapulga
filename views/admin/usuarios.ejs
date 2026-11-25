@@ -9,10 +9,10 @@
       <td><%= u.rol %></td>
       <td class="num"><%= u.activas %></td>
       <td class="num"><%= u.rechazadas %></td>
-      <td class="num" style="color:<%= u.strikes ? '#ff5236' : 'inherit' %>"><%= u.strikes %>/3</td>
+      <td class="num" style="color:<%= u.strikes ? '#e00000' : 'inherit' %>"><%= u.strikes %>/3</td>
       <td>
-        <% if (u.bloqueado) { %><span style="color:#ff5236">bloqueado</span>
-        <% } else if (!u.puede_publicar) { %><span style="color:#ffcc33">en revisión</span>
+        <% if (u.bloqueado) { %><span style="color:#e00000">bloqueado</span>
+        <% } else if (!u.puede_publicar) { %><span style="color:#e00000">en revisión</span>
         <% } else { %><span class="gris">activo</span><% } %>
       </td>
       <td>

@@ -1,0 +1,46 @@
+<%- include('../partials/head') %>
+<% const porHacer = oportunidades.filter(o => !o.resena_id); %>
+
+<h1 class="centro">reseñas</h1>
+<p class="intro">Solo puedes calificar a alguien con quien tuviste contacto por una publicación: al vendedor si consultaste su teléfono, o al comprador que consultó el tuyo. Es una reseña por persona y por artículo, y puedes editarla durante <%= dias %> días.</p>
+<hr>
+
+<h2>por reseñar</h2>
+<% if (!porHacer.length) { %>
+  <p class="gris">No tienes reseñas pendientes.</p>
+<% } else { %>
+  <table class="tabla">
+    <tr><th>persona</th><th>como</th><th>artículo</th><th>contacto</th><th></th></tr>
+    <% porHacer.forEach(o => { %>
+      <tr>
+        <td><a href="/usuarios/<%= o.receptor_id %>"><%= o.receptor %></a></td>
+        <td><%= o.rol_receptor %></td>
+        <td><a href="/publicaciones/<%= o.publicacion_id %>"><%= o.titulo %></a></td>
+        <td class="chico"><%= f.hace(o.consulta) %></td>
+        <td><% if (o.bloqueado) { %><span class="gris chico">cuenta bloqueada</span><% } else { %><a href="/resenas/nueva?publicacion=<%= o.publicacion_id %>&receptor=<%= o.receptor_id %>">calificar</a><% } %></td>
+      </tr>
+    <% }) %>
+  </table>
+<% } %>
+
+<h2>mis reseñas escritas</h2>
+<% if (!escritas.length) { %>
+  <p class="gris">Todavía no has escrito reseñas.</p>
+<% } else { %>
+  <table class="tabla">
+    <tr><th>para</th><th>artículo</th><th>calificación</th><th>estado</th><th></th></tr>
+    <% escritas.forEach(r => { %>
+      <tr>
+        <td><a href="/usuarios/<%= r.receptor_id %>"><%= r.receptor %></a> <small class="gris">(<%= r.rol_receptor %>)</small></td>
+        <td><%= r.titulo %></td>
+        <td><%- include('../partials/estrellas', { n: r.calificacion }) %></td>
+        <td class="chico">
+          <% if (r.estado === 'visible') { %>visible<% } else if (r.estado === 'en_revision') { %><span class="rojo-t">en revisión</span><% } else { %><span class="rojo-t">eliminada por moderación</span><% } %>
+        </td>
+        <td class="chico"><% if (r.editable) { %><a href="/resenas/<%= r.id %>/editar">editar</a><% } else { %><span class="gris">ya no editable</span><% } %></td>
+      </tr>
+    <% }) %>
+  </table>
+<% } %>
+
+<%- include('../partials/foot') %>

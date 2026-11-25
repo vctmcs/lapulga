@@ -26,7 +26,7 @@
         <td><a href="/publicaciones/<%= p.id %>"><%= p.titulo %></a><br><small class="gris"><%= f.hace(p.creado_en) %></small></td>
         <td class="<%= p.es_donacion ? 'dona' : 'precio' %>"><%= f.precio(p.precio) %></td>
         <td>
-          <% const colores = { publicada: '#66cc66', en_revision: '#ffcc33', rechazada: '#ff5236', vendida: '#8a8a8a' }; %>
+          <% const colores = { publicada: '#000', en_revision: '#e00000', rechazada: '#e00000', vendida: '#666' }; %>
           <span style="color:<%= colores[p.estado] %>"><%= f.ESTADOS[p.estado].toLowerCase() %></span>
         </td>
         <td class="num"><%= p.consultas %></td>

@@ -1,7 +1,10 @@
+<% const esNuevo = Date.now() - new Date(p.creado_en).getTime() < 48 * 3600 * 1000; %>
 <div class="item">
   <a class="foto" href="/publicaciones/<%= p.id %>"><img src="<%= p.portada ? '/uploads/' + p.portada : '/img/sin-foto.svg' %>" alt="" loading="lazy"></a>
-  <a class="titulo" href="/publicaciones/<%= p.id %>"><%= p.titulo %></a>
-  <span class="<%= p.es_donacion ? 'dona' : 'precio' %>"><%= f.precio(p.precio) %></span>
-  <% if (p.estado === 'vendida') { %><small class="gris">(vendida)</small><% } %>
-  <div class="datos"><%= p.categoria || 'sin categoría' %> &middot; <%= f.hace(p.creado_en) %></div>
+  <a class="titulo" href="/publicaciones/<%= p.id %>"><%= p.titulo %></a><% if (esNuevo && p.estado !== 'vendida') { %><span class="nuevo">NUEVO</span><% } %>
+  <div class="datos">
+    <span class="<%= p.es_donacion ? 'dona' : 'precio' %>"><%= f.precio(p.precio) %></span>
+    <% if (p.estado === 'vendida') { %><span class="gris">(vendido)</span><% } %><br>
+    <span class="gris"><%= p.categoria || 'sin categoría' %>, <%= f.hace(p.creado_en) %></span>
+  </div>
 </div>

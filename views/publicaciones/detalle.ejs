@@ -51,8 +51,11 @@
           <a href="/registro">crear cuenta gratis</a> &middot; <a href="/login">entrar</a>
         <% } else { %>
           <div data-contacto-datos hidden></div>
-          <button type="button" class="amarillo" data-contacto-ver><%= yaConsulto ? 'ver el contacto otra vez' : 'ver teléfono y WhatsApp' %></button>
+          <button type="button" class="rojo" data-contacto-ver><%= yaConsulto ? 'ver el contacto otra vez' : 'ver teléfono y WhatsApp' %></button>
           <p class="chico gris" style="margin:6px 0 0">Cada consulta del contacto queda registrada.</p>
+          <% if (yaConsulto && usuario.rol !== 'admin') { %>
+            <p class="chico" style="margin:6px 0 0">¿Ya trataste con <%= pub.vendedor.split(' ')[0] %>? <a href="/resenas/nueva?publicacion=<%= pub.id %>&receptor=<%= pub.usuario_id %>">Califícalo</a>.</p>
+          <% } %>
         <% } %>
       </div>
     <% } %>
@@ -70,7 +73,7 @@
         </form>
       <% } else { %>
         <details>
-          <summary class="chico" style="cursor:pointer;color:#8a8a8a">reportar esta publicación</summary>
+          <summary class="chico" style="cursor:pointer;color:#666">reportar esta publicación</summary>
           <form action="/publicaciones/<%= pub.id %>/reportar" method="post" style="margin-top:6px">
             <select name="motivo" required>
               <% Object.entries(motivos).forEach(([k, v]) => { %><option value="<%= k %>"><%= v %></option><% }) %>

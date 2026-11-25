@@ -1,9 +1,10 @@
 <%- include('../partials/head') %>
 <%- include('menu') %>
 
-<% if (!casos.length) { %>
+<% if (!casos.length && !resenas.length) { %>
   <p class="centro gris">No hay nada pendiente. Todas las detecciones están resueltas.</p>
 <% } %>
+<% if (casos.length) { %><h2>publicaciones (<%= casos.length %>)</h2><% } %>
 
 <% casos.forEach(c => { %>
   <div class="caso <%= c.estado === 'en_revision' ? 'oculta' : '' %>">
@@ -14,7 +15,7 @@
     <small class="gris">
       <%= c.estado === 'en_revision' ? 'OCULTA - en revisión' : 'visible (reporte de usuario)' %> &middot;
       de <a href="/usuarios/<%= c.usuario_id %>"><%= c.usuario %></a> (<%= c.email %>) &middot;
-      strikes: <span style="color:<%= c.strikes ? '#ff5236' : 'inherit' %>"><%= c.strikes %>/3</span> &middot;
+      strikes: <span style="color:<%= c.strikes ? '#e00000' : 'inherit' %>"><%= c.strikes %>/3</span> &middot;
       primer reporte <%= f.hace(c.primer_reporte) %>
     </small>
 
@@ -39,9 +40,40 @@
 
     <form action="/admin/publicaciones/<%= c.id %>/decidir" method="post" class="enlinea">
       <button type="submit" name="decision" value="confirmar" class="rojo" data-confirmar-boton="Se rechaza la publicación y <%= c.usuario %> recibe un strike (<%= c.strikes + 1 %>/3)<%= c.strikes + 1 >= 3 ? ' y su cuenta se BLOQUEA' : '' %>. ¿Continuar?">confirmar detección (+1 strike)</button>
-      <button type="submit" name="decision" value="descartar" class="verde">descartar (falso positivo, aprobar)</button>
+      <button type="submit" name="decision" value="descartar" class="negro">descartar (falso positivo, aprobar)</button>
     </form>
   </div>
 <% }) %>
+
+<% if (resenas.length) { %>
+  <h2>reseñas (<%= resenas.length %>)</h2>
+  <% resenas.forEach(r => { %>
+    <div class="caso <%= r.estado === 'en_revision' ? 'oculta' : '' %>">
+      <div class="sans chico">
+        <%- include('../partials/estrellas', { n: r.calificacion }) %>
+        <b><a href="/usuarios/<%= r.autor_id %>"><%= r.autor %></a></b> sobre <a href="/usuarios/<%= r.receptor_id %>"><%= r.receptor %></a> (como <%= r.rol_receptor %>)
+        por <a href="/publicaciones/<%= r.publicacion_id %>"><%= r.titulo %></a> &middot;
+        <%= r.estado === 'en_revision' ? 'OCULTA - en revisión' : 'visible (reporte de usuario)' %> &middot;
+        strikes del autor: <%= r.strikes %>/3
+      </div>
+      <div class="texto"><%= r.comentario || '(sin comentario)' %></div>
+      <table class="tabla">
+        <tr><th>filtro</th><th>detección</th><th class="num">puntaje</th><th>nota</th></tr>
+        <% r.reportes.forEach(x => { %>
+          <tr>
+            <td><%= filtros[x.filtro] || x.filtro %></td>
+            <td><%= motivosResena[x.etiqueta] || x.etiqueta %></td>
+            <td class="num"><%= Number(x.puntaje).toFixed(2) %></td>
+            <td class="chico"><%= x.por ? `${x.por}: ` : '' %><%= x.motivo || '' %></td>
+          </tr>
+        <% }) %>
+      </table>
+      <form action="/admin/resenas/<%= r.id %>/decidir" method="post" class="enlinea">
+        <button type="submit" name="decision" value="confirmar" class="rojo" data-confirmar-boton="Se elimina la reseña y <%= r.autor %> recibe un strike (<%= r.strikes + 1 %>/3)<%= r.strikes + 1 >= 3 ? ' y su cuenta se BLOQUEA' : '' %>. ¿Continuar?">eliminar reseña (+1 strike)</button>
+        <button type="submit" name="decision" value="descartar" class="negro">descartar (dejar visible)</button>
+      </form>
+    </div>
+  <% }) %>
+<% } %>
 
 <%- include('../partials/foot') %>

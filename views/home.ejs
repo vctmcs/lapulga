@@ -7,56 +7,64 @@
     return '/' + (qs ? '?' + qs : '');
   };
   const catActual = categorias.find(c => c.slug === filtros.categoria);
+  const tituloSeccion = filtros.donacion === 'si' ? 'donaciones' : filtros.donacion === 'no' ? 'en venta' : (catActual ? catActual.nombre.toLowerCase() : (filtros.q ? 'resultados' : 'la pulga hoy'));
 %>
 
-<% if (!hayFiltros && filtros.pagina === 1) { %>
-  <p class="centro">
-    Lo que a ti te sobra, a alguien le hace falta. Vende lo que ya no usas o regálalo.<br>
-    <span class="gris">Sin comisiones y sin chat: el trato es directo por teléfono o WhatsApp. Precio 0 = donación.</span>
-  </p>
+<% if (esPortada) { %>
+  <p class="intro">Lo que ya no usas, en manos de quien lo necesita: La Pulga reúne artículos usados en venta y donaciones de personas cerca de ti. El trato es directo, por teléfono o WhatsApp, y cada publicación pasa por una revisión.</p>
+  <hr>
+  <div class="titular">Regala lo que ya no usas</div>
+  <p class="centro"><a href="/?donacion=si">Ver donaciones...</a></p>
+  <hr>
 <% } %>
 
+<form class="buscar" action="/" method="get" role="search">
+  <label class="sr-only" for="buscar">Buscar</label>
+  <input id="buscar" type="search" name="q" maxlength="80" placeholder="buscar artículos..." value="<%= filtros.q %>">
+  <% if (filtros.categoria) { %><input type="hidden" name="cat" value="<%= filtros.categoria %>"><% } %>
+  <% if (filtros.donacion) { %><input type="hidden" name="donacion" value="<%= filtros.donacion %>"><% } %>
+  <button type="submit">buscar</button>
+</form>
+
 <div class="filtros">
-  <span class="gris">categorías:</span>
   <a href="<%= url({ cat: '' }) %>" class="<%= !filtros.categoria ? 'actual' : '' %>">todas</a>
-  <% categorias.forEach(c => { %>
-    &middot; <a href="<%= url({ cat: c.slug }) %>" class="<%= filtros.categoria === c.slug ? 'actual' : '' %>"><%= c.nombre.toLowerCase() %></a> <small class="gris">(<%= c.total %>)</small>
-  <% }) %>
+  <% categorias.forEach(c => { %> <b>|</b> <a href="<%= url({ cat: c.slug }) %>" class="<%= filtros.categoria === c.slug ? 'actual' : '' %>"><%= c.nombre.toLowerCase() %></a>&nbsp;<small class="gris">(<%= c.total %>)</small><% }) %>
   <br>
-  <span class="gris">mostrar:</span>
-  <a href="<%= url({ donacion: '' }) %>" class="<%= !filtros.donacion ? 'actual' : '' %>">todo</a> &middot;
-  <a href="<%= url({ donacion: 'no' }) %>" class="<%= filtros.donacion === 'no' ? 'actual' : '' %>">en venta</a> &middot;
+  <a href="<%= url({ donacion: '' }) %>" class="<%= !filtros.donacion ? 'actual' : '' %>">todo</a> <b>|</b>
+  <a href="<%= url({ donacion: 'no' }) %>" class="<%= filtros.donacion === 'no' ? 'actual' : '' %>">en venta</a> <b>|</b>
   <a href="<%= url({ donacion: 'si' }) %>" class="<%= filtros.donacion === 'si' ? 'actual' : '' %>">donaciones</a>
-  &nbsp; <span class="gris">ordenar:</span>
-  <a href="<%= url({ orden: '' }) %>" class="<%= filtros.orden === 'recientes' ? 'actual' : '' %>">recientes</a> &middot;
-  <a href="<%= url({ orden: 'precio_asc' }) %>" class="<%= filtros.orden === 'precio_asc' ? 'actual' : '' %>">precio menor</a> &middot;
-  <a href="<%= url({ orden: 'precio_desc' }) %>" class="<%= filtros.orden === 'precio_desc' ? 'actual' : '' %>">precio mayor</a>
+  &nbsp;&nbsp;<span class="gris">ordenar:</span>
+  <a href="<%= url({ orden: '' }) %>" class="<%= filtros.orden === 'recientes' ? 'actual' : '' %>">recientes</a> <b>|</b>
+  <a href="<%= url({ orden: 'precio_asc' }) %>" class="<%= filtros.orden === 'precio_asc' ? 'actual' : '' %>">más baratos</a> <b>|</b>
+  <a href="<%= url({ orden: 'precio_desc' }) %>" class="<%= filtros.orden === 'precio_desc' ? 'actual' : '' %>">más caros</a>
 </div>
 
-<p class="gris chico">
-  <%= total %> <%= total === 1 ? 'artículo' : 'artículos' %><% if (filtros.q) { %> para "<%= filtros.q %>"<% } %><% if (catActual) { %> en <%= catActual.nombre.toLowerCase() %><% } %>
-  <% if (hayFiltros) { %> &middot; <a href="/">quitar filtros</a><% } %>
-</p>
+<div class="seccion-cab">
+  <h2><%= tituloSeccion %></h2>
+  <p>
+    <%= total %> <%= total === 1 ? 'artículo' : 'artículos' %><% if (filtros.q) { %> para «<%= filtros.q %>»<% } %>
+    <% if (hayFiltros) { %> &middot; <a href="/">quitar filtros</a><% } %>
+  </p>
+</div>
 
 <% if (items.length) { %>
   <div class="lista">
     <% items.forEach(p => { %><%- include('partials/tarjeta', { p }) %><% }) %>
   </div>
-
   <% if (paginas > 1) { %>
     <div class="paginas">
       <% if (filtros.pagina > 1) { %><a href="<%= url({ pagina: filtros.pagina - 1 }) %>">&laquo; anterior</a><% } %>
       <% for (let i = 1; i <= paginas; i++) { %>
-        <% if (i === filtros.pagina) { %><span class="actual">[<%= i %>]</span><% } else { %><a href="<%= url({ pagina: i }) %>"><%= i %></a><% } %>
+        <% if (i === filtros.pagina) { %><span class="actual"><%= i %></span><% } else { %><a href="<%= url({ pagina: i }) %>"><%= i %></a><% } %>
       <% } %>
       <% if (filtros.pagina < paginas) { %><a href="<%= url({ pagina: filtros.pagina + 1 }) %>">siguiente &raquo;</a><% } %>
     </div>
   <% } %>
 <% } else { %>
   <p class="centro gris">
-    <% if (hayFiltros) { %>No hay artículos con esos filtros. <a href="/">ver todo</a>
+    <% if (hayFiltros) { %>No hay artículos con esos filtros. <a href="/">Ver todo</a>.
     <% } else { %>Todavía no hay publicaciones.
-      <a href="<%= !usuario ? '/registro?rol=vendedor' : (usuario.rol === 'vendedor' ? '/publicaciones/nueva' : '/cuenta') %>">publica la primera</a>.
+      <a href="<%= !usuario ? '/registro?rol=vendedor' : (usuario.rol === 'vendedor' ? '/publicaciones/nueva' : '/cuenta') %>">Publica la primera</a>.
     <% } %>
   </p>
 <% } %>

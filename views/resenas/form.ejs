@@ -1,0 +1,40 @@
+<%- include('../partials/head') %>
+<% const v = valores || {}; const cal = String(v.calificacion || ''); %>
+
+<h1 class="centro"><%= resena ? 'editar reseña' : 'escribir reseña' %></h1>
+<p class="centro">
+  Calificas a <b><%= contexto.receptor %></b> como <b><%= contexto.rol %></b><br>
+  <span class="gris">por el artículo «<%= contexto.titulo %>»</span>
+</p>
+
+<form action="<%= resena ? `/resenas/${resena.id}/editar` : '/resenas' %>" method="post" novalidate>
+  <% if (!resena) { %>
+    <input type="hidden" name="publicacion_id" value="<%= contexto.publicacionId %>">
+    <input type="hidden" name="receptor_id" value="<%= contexto.receptorId %>">
+  <% } %>
+  <table class="forma">
+    <tr>
+      <td>calificación</td>
+      <td>
+        <div class="selector-estrellas" role="radiogroup" aria-label="Calificación de 1 a 5 estrellas">
+          <% for (let i = 5; i >= 1; i--) { %>
+            <input type="radio" id="est-<%= i %>" name="calificacion" value="<%= i %>" <%= cal === String(i) ? 'checked' : '' %>>
+            <label for="est-<%= i %>" title="<%= i %> de 5">★</label>
+          <% } %>
+        </div>
+        <% if (errores.calificacion) { %><span class="error"><%= errores.calificacion %></span><% } %>
+      </td>
+    </tr>
+    <tr>
+      <td><label for="comentario">comentario</label></td>
+      <td>
+        <textarea id="comentario" name="comentario" maxlength="1000" placeholder="¿Cómo fue el trato? ¿Llegó a tiempo, el artículo era como se describía? (opcional)" data-contar="1000" aria-invalid="<%= !!errores.comentario %>"><%= v.comentario || '' %></textarea>
+        <% if (errores.comentario) { %><span class="error"><%= errores.comentario %></span><% } %>
+        <span class="ayuda">El comentario pasa por la misma revisión automática que las publicaciones. Puedes editar la reseña durante 7 días.</span>
+      </td>
+    </tr>
+    <tr><td></td><td><button type="submit" class="rojo"><%= resena ? 'guardar cambios' : 'publicar reseña' %></button> &nbsp; <a href="/resenas">cancelar</a></td></tr>
+  </table>
+</form>
+
+<%- include('../partials/foot') %>

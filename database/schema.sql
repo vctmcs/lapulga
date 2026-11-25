@@ -90,3 +90,25 @@ ALTER TABLE reportes_ia ADD CONSTRAINT reportes_ia_filtro_check
 ALTER TABLE reportes_ia ADD COLUMN IF NOT EXISTS reportado_por INTEGER REFERENCES usuarios(id) ON DELETE SET NULL;
 ALTER TABLE reportes_ia ADD COLUMN IF NOT EXISTS motivo VARCHAR(300);
 CREATE INDEX IF NOT EXISTS idx_reportes_pendientes ON reportes_ia(publicacion_id) WHERE decision_admin IS NULL;
+
+-- ===== Entrega 3: reseñas =====
+ALTER TABLE resenas ADD COLUMN IF NOT EXISTS estado VARCHAR(12) NOT NULL DEFAULT 'visible';
+ALTER TABLE resenas DROP CONSTRAINT IF EXISTS resenas_estado_check;
+ALTER TABLE resenas ADD CONSTRAINT resenas_estado_check CHECK (estado IN ('visible', 'en_revision', 'eliminada'));
+CREATE INDEX IF NOT EXISTS idx_resenas_receptor ON resenas(receptor_id);
+
+-- Detecciones de la IA y reportes de usuarios sobre reseñas
+CREATE TABLE IF NOT EXISTS reportes_resenas (
+  id              SERIAL PRIMARY KEY,
+  resena_id       INTEGER      NOT NULL REFERENCES resenas(id) ON DELETE CASCADE,
+  filtro          VARCHAR(20)  NOT NULL CHECK (filtro IN ('terminos', 'texto_zero_shot', 'usuario')),
+  etiqueta        VARCHAR(80)  NOT NULL,
+  puntaje         NUMERIC(5,4) NOT NULL DEFAULT 0,
+  reportado_por   INTEGER      REFERENCES usuarios(id) ON DELETE SET NULL,
+  motivo          VARCHAR(300),
+  decision_admin  VARCHAR(12)  CHECK (decision_admin IN ('confirmada', 'descartada')),
+  admin_id        INTEGER      REFERENCES usuarios(id) ON DELETE SET NULL,
+  fecha           TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  fecha_decision  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_reportes_resenas_pend ON reportes_resenas(resena_id) WHERE decision_admin IS NULL;
