@@ -1,0 +1,75 @@
+<%- include('../partials/head') %>
+<%
+  const cuenta = (e) => publicaciones.filter(p => p.estado === e).length;
+  const consultas = publicaciones.reduce((s, p) => s + p.consultas, 0);
+%>
+
+<div class="seccion__cab">
+  <div>
+    <h1 style="margin-bottom:.2rem">Mis publicaciones</h1>
+    <p class="suave" style="margin:0">Administra lo que vendes y lo que donas.</p>
+  </div>
+  <% if (usuario.puede_publicar) { %>
+    <a class="btn btn--primario" href="/publicaciones/nueva"><%- include('../partials/icono', { n: 'mas', t: 18 }) %> Nueva publicación</a>
+  <% } %>
+</div>
+
+<% if (!usuario.puede_publicar) { %>
+  <div class="aviso aviso--alerta" style="margin-bottom:1.25rem">Una de tus publicaciones fue reportada y está en revisión. No puedes publicar hasta que el administrador la revise.</div>
+<% } %>
+<% if (usuario.strikes > 0) { %>
+  <div class="aviso aviso--error" style="margin-bottom:1.25rem">Tienes <%= usuario.strikes %> de 3 strikes. Al llegar a 3 tu cuenta se bloquea.</div>
+<% } %>
+
+<div class="resumen">
+  <div class="dato"><strong><%= cuenta('publicada') %></strong><span>Publicadas</span></div>
+  <div class="dato"><strong><%= cuenta('vendida') %></strong><span>Vendidas / entregadas</span></div>
+  <div class="dato"><strong><%= cuenta('en_revision') %></strong><span>En revisión</span></div>
+  <div class="dato"><strong><%= consultas %></strong><span>Consultas de contacto</span></div>
+</div>
+
+<% if (!publicaciones.length) { %>
+  <div class="vacio">
+    <%- include('../partials/icono', { n: 'etiqueta', t: 64 }) %>
+    <h2>Todavía no publicas nada</h2>
+    <p>Toma un par de fotos, ponle precio (o 0 si lo regalas) y listo.</p>
+    <a class="btn btn--primario" href="/publicaciones/nueva">Publicar mi primer artículo</a>
+  </div>
+<% } else { %>
+  <div class="lista-pubs">
+    <% publicaciones.forEach(p => { %>
+      <div class="fila-pub">
+        <div class="fila-pub__foto"><img src="<%= p.portada ? '/uploads/' + p.portada : '/img/sin-foto.svg' %>" alt="" loading="lazy"></div>
+        <div class="fila-pub__info">
+          <a href="/publicaciones/<%= p.id %>"><%= p.titulo %></a>
+          <div class="fila-pub__meta">
+            <span class="precio <%= p.es_donacion ? 'precio--dona' : '' %>" style="font-size:.85rem"><%= f.precio(p.precio) %></span>
+            <span class="estado estado--<%= p.estado %>"><%= f.ESTADOS[p.estado] %></span>
+            <span><%= p.consultas %> <%= p.consultas === 1 ? 'consulta' : 'consultas' %></span>
+            <span><%= f.hace(p.creado_en) %></span>
+          </div>
+        </div>
+        <div class="fila-pub__acciones">
+          <% if (p.estado !== 'en_revision') { %>
+            <a class="btn btn--chico" href="/publicaciones/<%= p.id %>/editar"><%- include('../partials/icono', { n: 'lapiz', t: 16 }) %> Editar</a>
+          <% } %>
+          <% if (p.estado === 'publicada' || p.estado === 'vendida') { %>
+            <form action="/publicaciones/<%= p.id %>/vendida" method="post">
+              <button class="btn btn--chico" type="submit">
+                <%- include('../partials/icono', { n: 'check', t: 16 }) %>
+                <%= p.estado === 'vendida' ? 'Reactivar' : (p.es_donacion ? 'Entregada' : 'Vendida') %>
+              </button>
+            </form>
+          <% } %>
+          <% if (p.estado !== 'en_revision') { %>
+            <form action="/publicaciones/<%= p.id %>/eliminar" method="post" data-confirmar="¿Eliminar «<%= p.titulo %>»? Esta acción no se puede deshacer.">
+              <button class="btn btn--chico btn--peligro" type="submit" aria-label="Eliminar"><%- include('../partials/icono', { n: 'basura', t: 16 }) %></button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<%- include('../partials/foot') %>

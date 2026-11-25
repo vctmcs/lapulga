@@ -1,0 +1,14 @@
+<a class="tarjeta" href="/publicaciones/<%= p.id %>">
+  <div class="tarjeta__foto">
+    <img src="<%= p.portada ? '/uploads/' + p.portada : '/img/sin-foto.svg' %>" alt="" loading="lazy">
+  </div>
+  <% if (p.estado && p.estado === 'vendida') { %><span class="tarjeta__estado">Vendida</span><% } %>
+  <div class="tarjeta__cuerpo">
+    <span class="precio <%= p.es_donacion ? 'precio--dona' : '' %>"><%= f.precio(p.precio) %></span>
+    <span class="tarjeta__titulo"><%= p.titulo %></span>
+    <div class="tarjeta__meta">
+      <span><%= p.categoria || 'Sin categoría' %></span>
+      <span><%= f.hace(p.creado_en) %></span>
+    </div>
+  </div>
+</a>

@@ -1,0 +1,31 @@
+<%- include('../partials/head') %>
+
+<header class="perfil-cab">
+  <span class="avatar avatar--xl"><%= f.iniciales(perfil.nombre) %></span>
+  <div>
+    <h1><%= perfil.nombre %></h1>
+    <div class="insignias">
+      <span class="insignia insignia--rol"><%= perfil.rol === 'vendedor' ? 'Vendedor' : 'Comprador' %></span>
+      <span class="insignia">Desde <%= f.fecha(perfil.creado_en) %></span>
+      <% if (perfil.rol === 'vendedor') { %>
+        <span class="insignia"><%= perfil.activas %> <%= perfil.activas === 1 ? 'publicación activa' : 'publicaciones activas' %></span>
+        <% if (perfil.donaciones) { %><span class="insignia" style="background:var(--verde-claro)"><%= perfil.donaciones %> en donación</span><% } %>
+      <% } %>
+    </div>
+  </div>
+  <% if (esPropio) { %><a class="btn btn--chico" style="margin-left:auto" href="/cuenta">Editar mi cuenta</a><% } %>
+</header>
+
+<% if (perfil.rol === 'vendedor') { %>
+  <% if (publicaciones.length) { %>
+    <div class="rejilla">
+      <% publicaciones.forEach(p => { %><%- include('../partials/tarjeta', { p }) %><% }) %>
+    </div>
+  <% } else { %>
+    <div class="vacio"><p>Este vendedor no tiene publicaciones activas por ahora.</p></div>
+  <% } %>
+<% } else { %>
+  <div class="vacio"><p>Los compradores no tienen publicaciones. Las reseñas estarán disponibles pronto.</p></div>
+<% } %>
+
+<%- include('../partials/foot') %>

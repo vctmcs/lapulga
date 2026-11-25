@@ -1,0 +1,97 @@
+<%- include('../partials/head') %>
+<%
+  const v = valores || {};
+  const accion = pub ? `/publicaciones/${pub.id}/editar` : '/publicaciones';
+  const marcadas = [].concat(v.quitar_imagen || []).map(String);
+%>
+
+<div class="form-pagina">
+  <nav class="migas" aria-label="Ruta">
+    <a href="/mis-publicaciones">Mis publicaciones</a> <span>/</span> <span><%= pub ? 'Editar' : 'Nueva' %></span>
+  </nav>
+  <h1><%= pub ? 'Editar publicación' : 'Publica tu artículo' %></h1>
+  <p class="suave">Una buena foto y una descripción honesta hacen que te contacten más rápido.</p>
+
+  <% if (Object.keys(errores).length) { %>
+    <div class="aviso aviso--error" role="alert" style="margin-bottom:1.25rem">Revisa los campos marcados en rojo.</div>
+  <% } %>
+
+  <form class="caja caja--sombra" action="<%= accion %>" method="post" enctype="multipart/form-data" novalidate data-form-publicacion>
+    <div class="form-grid">
+      <div class="campo ancho">
+        <label for="titulo">Título</label>
+        <input class="entrada" id="titulo" name="titulo" maxlength="120" required value="<%= v.titulo || '' %>"
+               placeholder="Ej. Bicicleta rodada 26 con frenos nuevos" aria-invalid="<%= !!errores.titulo %>" data-contar="120">
+        <% if (errores.titulo) { %><span class="error"><%= errores.titulo %></span><% } %>
+      </div>
+
+      <div class="campo">
+        <label for="categoria_id">Categoría</label>
+        <select class="entrada" id="categoria_id" name="categoria_id" required aria-invalid="<%= !!errores.categoria_id %>">
+          <option value="">Elige una…</option>
+          <% categorias.forEach(c => { %>
+            <option value="<%= c.id %>" <%= String(v.categoria_id) === String(c.id) ? 'selected' : '' %>><%= c.nombre %></option>
+          <% }) %>
+        </select>
+        <% if (errores.categoria_id) { %><span class="error"><%= errores.categoria_id %></span><% } %>
+      </div>
+
+      <div class="campo">
+        <label for="precio">Precio</label>
+        <div class="precio-campo <%= errores.precio ? 'invalido' : '' %>">
+          <span>$</span>
+          <input id="precio" name="precio" inputmode="decimal" required value="<%= v.precio ?? '' %>" placeholder="0.00"
+                 aria-describedby="precio-ayuda" aria-invalid="<%= !!errores.precio %>" data-precio>
+        </div>
+        <div class="precio-vista" id="precio-ayuda" data-precio-vista>Obligatorio. Escribe <strong class="mono">0</strong> si lo quieres regalar.</div>
+        <% if (errores.precio) { %><span class="error"><%= errores.precio %></span><% } %>
+      </div>
+
+      <div class="campo ancho">
+        <label for="descripcion">Descripción</label>
+        <textarea class="entrada" id="descripcion" name="descripcion" maxlength="3000" required aria-invalid="<%= !!errores.descripcion %>"
+                  placeholder="Estado, medidas, tiempo de uso, si tiene detalles, zona de entrega…" data-contar="3000"><%= v.descripcion || '' %></textarea>
+        <% if (errores.descripcion) { %><span class="error"><%= errores.descripcion %></span><% } %>
+      </div>
+
+      <div class="campo ancho">
+        <span class="etiqueta-campo">Fotos <span class="suave" style="font-weight:500">(máximo <%= maxImagenes %>, JPG, PNG o WEBP de hasta 5 MB)</span></span>
+
+        <% if (imagenes.length) { %>
+          <span class="ayuda">Marca las fotos que quieras quitar.</span>
+          <div class="miniaturas">
+            <% imagenes.forEach((img, i) => { %>
+              <div class="miniatura">
+                <img src="/uploads/<%= img.ruta %>" alt="Foto <%= i + 1 %>">
+                <% if (i === 0) { %><span class="marca">Portada</span><% } %>
+                <input type="checkbox" id="quitar-<%= img.id %>" name="quitar_imagen" value="<%= img.id %>" <%= marcadas.includes(String(img.id)) ? 'checked' : '' %>>
+                <label for="quitar-<%= img.id %>"><%- include('../partials/icono', { n: 'basura', t: 14 }) %> Quitar</label>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+
+        <label class="zona-fotos" data-zona-fotos style="margin-top:.5rem">
+          <input type="file" name="imagenes" accept="image/jpeg,image/png,image/webp" multiple data-fotos data-max="<%= maxImagenes - imagenes.length %>">
+          <%- include('../partials/icono', { n: 'camara', t: 40 }) %>
+          <strong><%= imagenes.length ? 'Agregar más fotos' : 'Arrastra tus fotos aquí' %></strong>
+          <small>o haz clic para elegirlas · la primera será la portada</small>
+        </label>
+        <div class="miniaturas" data-vista-fotos></div>
+        <% if (errores.imagenes) { %><span class="error"><%= errores.imagenes %></span><% } %>
+      </div>
+
+      <div class="ancho aviso-moderacion">
+        <%- include('../partials/icono', { n: 'escudo' }) %>
+        <span>Al publicar, el texto y las fotos pasan por una revisión automática. Si algo parece prohibido, la publicación se oculta hasta que un administrador la revise y no podrás publicar mientras tanto.</span>
+      </div>
+    </div>
+
+    <div class="form-acciones">
+      <a class="btn btn--plano" href="<%= pub ? '/publicaciones/' + pub.id : '/mis-publicaciones' %>">Cancelar</a>
+      <button class="btn btn--primario" type="submit" data-enviar><%= pub ? 'Guardar cambios' : 'Publicar' %></button>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/foot') %>
