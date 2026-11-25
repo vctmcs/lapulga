@@ -3,31 +3,22 @@
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
   const escapar = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const moneda = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 
-  // ---------- Avisos ----------
-  $$('[data-cerrar]').forEach((b) => b.addEventListener('click', () => b.closest('.aviso').remove()));
-
-  // ---------- Menú de usuario: cerrar al hacer clic fuera ----------
-  document.addEventListener('click', (e) => {
-    $$('details.menu[open]').forEach((d) => { if (!d.contains(e.target)) d.removeAttribute('open'); });
-  });
-
-  // ---------- Orden: enviar al cambiar ----------
-  $$('form[data-autoenvio] select').forEach((s) => s.addEventListener('change', () => s.form.submit()));
+  // ---------- Mensajes ----------
+  $$('[data-cerrar]').forEach((b) => b.addEventListener('click', () => b.closest('.msg').remove()));
 
   // ---------- Confirmaciones ----------
   $$('form[data-confirmar]').forEach((f) =>
     f.addEventListener('submit', (e) => { if (!window.confirm(f.dataset.confirmar)) e.preventDefault(); })
   );
+  $$('button[data-confirmar-boton]').forEach((b) =>
+    b.addEventListener('click', (e) => { if (!window.confirm(b.dataset.confirmarBoton)) e.preventDefault(); })
+  );
 
   // ---------- Mostrar contraseña ----------
-  $$('[data-ver-pass]').forEach((b) =>
-    b.addEventListener('click', () => {
-      const input = b.parentElement.querySelector('input');
-      const ver = input.type === 'password';
-      input.type = ver ? 'text' : 'password';
-      b.setAttribute('aria-label', ver ? 'Ocultar contraseña' : 'Mostrar contraseña');
-    })
+  $$('[data-ver-pass]').forEach((chk) =>
+    chk.addEventListener('change', () => { document.getElementById(chk.dataset.verPass).type = chk.checked ? 'text' : 'password'; })
   );
 
   // ---------- WhatsApp igual al teléfono ----------
@@ -50,7 +41,7 @@
     if (!opcional) return;
     const actualizar = () => {
       const vendedor = $('input[name="rol"]:checked', form)?.value === 'vendedor';
-      opcional.textContent = vendedor ? '(o WhatsApp, obligatorio)' : '(opcional)';
+      opcional.textContent = vendedor ? 'obligatorio para vendedores (o el WhatsApp)' : 'opcional';
     };
     $$('input[name="rol"]', form).forEach((r) => r.addEventListener('change', actualizar));
     actualizar();
@@ -60,8 +51,8 @@
   $$('[data-contar]').forEach((campo) => {
     const max = Number(campo.dataset.contar);
     const c = document.createElement('span');
-    c.className = 'contador';
-    campo.closest('.campo').appendChild(c);
+    c.className = 'ayuda';
+    campo.after(c);
     const pintar = () => { c.textContent = `${campo.value.length} / ${max}`; };
     campo.addEventListener('input', pintar);
     pintar();
@@ -72,15 +63,14 @@
   const vista = $('[data-precio-vista]');
   if (precio && vista) {
     const original = vista.innerHTML;
-    const moneda = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
     const pintar = () => {
       const t = precio.value.replace(/[$,\s]/g, '');
       if (t === '') { vista.innerHTML = original; return; }
-      if (!/^\d+(\.\d{1,2})?$/.test(t)) { vista.innerHTML = '<span style="color:var(--rojo);font-weight:600">Solo números, con hasta 2 decimales.</span>'; return; }
+      if (!/^\d+(\.\d{1,2})?$/.test(t)) { vista.innerHTML = '<span class="error">Solo números, con hasta 2 decimales.</span>'; return; }
       const n = Number(t);
       vista.innerHTML = n === 0
-        ? 'Se mostrará como <span class="precio precio--dona" style="font-size:.82rem">Donación / Gratis</span>'
-        : `Se mostrará como <span class="precio" style="font-size:.82rem">${moneda.format(n).replace('.00', '')}</span>`;
+        ? 'Se mostrará como <span class="dona">Donación / Gratis</span>'
+        : `Se mostrará como <span class="precio">${moneda.format(n).replace('.00', '')}</span>`;
     };
     precio.addEventListener('input', pintar);
     pintar();
@@ -94,15 +84,25 @@
     const max = Number(inputFotos.dataset.max);
     const permitidos = ['image/jpeg', 'image/png', 'image/webp'];
 
+    const aviso = (texto) => {
+      let a = $('[data-aviso-fotos]');
+      if (!a) {
+        a = document.createElement('span');
+        a.className = 'error';
+        a.dataset.avisoFotos = '';
+        contenedor.after(a);
+      }
+      a.textContent = texto;
+    };
+
     const pintar = () => {
       contenedor.innerHTML = '';
       Array.from(inputFotos.files).forEach((archivo, i) => {
         const url = URL.createObjectURL(archivo);
         const div = document.createElement('div');
-        div.className = 'miniatura';
-        div.innerHTML = `<img src="${url}" alt="">${i === 0 && !document.querySelector('.miniatura input[name="quitar_imagen"]') ? '<span class="marca">Portada</span>' : ''}
-          <label data-quitar="${i}">Quitar</label>`;
-        $('img', div).onload = () => URL.revokeObjectURL(url);
+        div.className = 'foto';
+        div.innerHTML = `<img src="${url}" alt=""><a href="#" data-quitar="${i}">quitar</a>`;
+        div.querySelector('img').onload = () => URL.revokeObjectURL(url);
         contenedor.appendChild(div);
       });
     };
@@ -112,23 +112,13 @@
       const validos = archivos.filter((a) => permitidos.includes(a.type) && a.size <= 5 * 1024 * 1024);
       validos.slice(0, Math.max(0, max)).forEach((a) => dt.items.add(a));
       inputFotos.files = dt.files;
-      if (validos.length < archivos.length) alertaFotos('Se omitieron archivos que no son JPG, PNG o WEBP, o que pesan más de 5 MB.');
-      else if (validos.length > max) alertaFotos(`Solo se agregaron ${max} foto(s): es el máximo permitido.`);
+      if (validos.length < archivos.length) aviso('Se omitieron archivos que no son JPG, PNG o WEBP, o que pesan más de 5 MB.');
+      else if (validos.length > max) aviso(`Solo se agregaron ${max} foto(s): es el máximo permitido.`);
+      else aviso('');
       pintar();
     };
 
-    const alertaFotos = (texto) => {
-      let a = $('[data-alerta-fotos]');
-      if (!a) {
-        a = document.createElement('span');
-        a.className = 'error';
-        a.dataset.alertaFotos = '';
-        contenedor.after(a);
-      }
-      a.textContent = texto;
-    };
-
-    // Acumula: si el usuario elige más fotos después, se suman a las anteriores
+    // Si eligen fotos en varias tandas, se suman
     let previas = [];
     inputFotos.addEventListener('click', () => { previas = Array.from(inputFotos.files); });
     inputFotos.addEventListener('change', () => fijar([...previas, ...Array.from(inputFotos.files)]));
@@ -136,6 +126,7 @@
     contenedor.addEventListener('click', (e) => {
       const q = e.target.closest('[data-quitar]');
       if (!q) return;
+      e.preventDefault();
       const arr = Array.from(inputFotos.files);
       arr.splice(Number(q.dataset.quitar), 1);
       fijar(arr);
@@ -149,22 +140,22 @@
     });
   }
 
-  // Evita doble envío del formulario de publicación
+  // Evita doble envío mientras la IA revisa la publicación
   $$('form[data-form-publicacion]').forEach((f) =>
     f.addEventListener('submit', () => {
       const b = $('[data-enviar]', f);
       b.disabled = true;
-      b.textContent = 'Revisando y publicando…';
+      b.textContent = 'revisando y publicando...';
     })
   );
 
   // ---------- Galería ----------
   $$('[data-galeria]').forEach((g) => {
     const principal = $('[data-galeria-principal]', g);
-    $$('.galeria__miniaturas button', g).forEach((b) =>
+    $$('.miniaturas button', g).forEach((b) =>
       b.addEventListener('click', () => {
         principal.src = b.dataset.src;
-        $$('.galeria__miniaturas button', g).forEach((x) => x.setAttribute('aria-current', String(x === b)));
+        $$('.miniaturas button', g).forEach((x) => x.setAttribute('aria-current', String(x === b)));
       })
     );
   });
@@ -177,8 +168,8 @@
 
     boton.addEventListener('click', async () => {
       boton.disabled = true;
-      const textoOriginal = boton.innerHTML;
-      boton.textContent = 'Cargando…';
+      const texto = boton.textContent;
+      boton.textContent = 'cargando...';
       try {
         const r = await fetch(`/publicaciones/${caja.dataset.id}/contacto`, {
           method: 'POST',
@@ -189,22 +180,16 @@
         if (!r.ok) throw new Error(d.error || 'No se pudo obtener el contacto.');
 
         let html = '';
-        if (d.telefono) {
-          html += `<div class="contacto__dato"><div><span>Teléfono</span><strong>${escapar(d.telefono)}</strong></div>
-                   <a class="btn btn--chico" href="${escapar(d.telLink)}">Llamar</a></div>`;
-        }
-        if (d.whatsapp) {
-          html += `<div class="contacto__dato"><div><span>WhatsApp</span><strong>${escapar(d.whatsapp)}</strong></div>
-                   <a class="btn btn--chico btn--wa" href="${escapar(d.waLink)}" target="_blank" rel="noopener">Escribir</a></div>`;
-        }
-        if (!html) html = '<p style="margin:0">Este usuario no tiene datos de contacto registrados.</p>';
+        if (d.telefono) html += `<div class="contacto-dato">teléfono: <b>${escapar(d.telefono)}</b> &middot; <a href="${escapar(d.telLink)}">llamar</a></div>`;
+        if (d.whatsapp) html += `<div class="contacto-dato">whatsapp: <b>${escapar(d.whatsapp)}</b> &middot; <a href="${escapar(d.waLink)}" target="_blank" rel="noopener">escribir</a></div>`;
+        if (!html) html = '<p>Este usuario no tiene datos de contacto registrados.</p>';
         datos.innerHTML = html;
         datos.hidden = false;
         boton.remove();
       } catch (err) {
         boton.disabled = false;
-        boton.innerHTML = textoOriginal;
-        datos.innerHTML = `<div class="aviso aviso--error">${escapar(err.message)}</div>`;
+        boton.textContent = texto;
+        datos.innerHTML = `<p class="error">${escapar(err.message)}</p>`;
         datos.hidden = false;
       }
     });

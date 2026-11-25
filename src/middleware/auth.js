@@ -1,4 +1,5 @@
 const Usuario = require('../models/usuarioModel');
+const Moderacion = require('../models/moderacionModel');
 
 // Carga el usuario de la sesión en cada petición (si cambió su rol o fue bloqueado, se refleja al instante)
 async function cargarUsuario(req, res, next) {
@@ -12,6 +13,7 @@ async function cargarUsuario(req, res, next) {
     } else {
       req.usuario = u;
       res.locals.usuario = u;
+      if (u.rol === 'admin') res.locals.pendientes = await Moderacion.pendientes();
     }
   }
   next();

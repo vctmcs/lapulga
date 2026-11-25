@@ -1,0 +1,42 @@
+<%- include('../partials/head') %>
+<%- include('menu') %>
+<% const pct = (x) => x === null ? '-' : (x * 100).toFixed(1) + '%'; %>
+
+<div class="cifras">
+  <div><b><%= pct(m.precision) %></b><small class="gris">precisión de la IA<br>VP / (VP + FP)</small></div>
+  <div><b><%= pct(m.exhaustividad) %></b><small class="gris">exhaustividad<br>VP / (VP + FN)</small></div>
+  <div><b><%= m.casos.fp %></b><small class="gris">falsos positivos<br>(IA marcó, admin descartó)</small></div>
+  <div><b><%= m.casos.fn %></b><small class="gris">falsos negativos<br>(IA dejó pasar, admin confirmó)</small></div>
+</div>
+
+<h2>Por publicación revisada</h2>
+<table class="tabla">
+  <tr><th>caso</th><th class="num">cantidad</th><th>significado</th></tr>
+  <tr><td>verdaderos positivos (VP)</td><td class="num"><%= m.casos.vp %></td><td class="chico">La IA marcó y el administrador confirmó.</td></tr>
+  <tr><td>falsos positivos (FP)</td><td class="num"><%= m.casos.fp %></td><td class="chico">La IA marcó, pero era un artículo válido.</td></tr>
+  <tr><td>falsos negativos (FN)</td><td class="num"><%= m.casos.fn %></td><td class="chico">La IA no marcó; llegó por reporte de usuario u ocultada por el admin y se confirmó.</td></tr>
+  <tr><td>reportes infundados</td><td class="num"><%= m.casos.reportes_infundados %></td><td class="chico">Reportes de usuarios que el administrador descartó (no cuentan para la IA).</td></tr>
+</table>
+
+<h2>Por filtro</h2>
+<table class="tabla">
+  <tr><th>filtro</th><th class="num">detecciones</th><th class="num">confirmadas</th><th class="num">descartadas</th><th class="num">pendientes</th><th class="num">precisión</th></tr>
+  <% Object.keys(filtros).forEach(k => {
+       const r = m.porFiltro.find(x => x.filtro === k) || { total: 0, confirmadas: 0, descartadas: 0, pendientes: 0 };
+       const p = r.confirmadas + r.descartadas ? r.confirmadas / (r.confirmadas + r.descartadas) : null; %>
+    <tr>
+      <td><%= filtros[k] %></td>
+      <td class="num"><%= r.total %></td>
+      <td class="num"><%= r.confirmadas %></td>
+      <td class="num"><%= r.descartadas %></td>
+      <td class="num"><%= r.pendientes %></td>
+      <td class="num"><%= pct(p) %></td>
+    </tr>
+  <% }) %>
+</table>
+<p class="chico gris">Una misma publicación puede tener detecciones de varios filtros, por eso las cifras por filtro suman más que las de publicaciones.</p>
+
+<h2>Usuarios</h2>
+<p><%= m.usuarios.con_strikes %> con strikes &middot; <%= m.usuarios.bloqueados %> bloqueados &middot; <%= m.usuarios.sin_permiso %> sin permiso de publicar (en revisión) &middot; <a href="/admin/usuarios">ver lista</a></p>
+
+<%- include('../partials/foot') %>

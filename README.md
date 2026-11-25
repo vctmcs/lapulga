@@ -6,10 +6,10 @@ Marketplace web de artículos usados y donaciones con moderación asistida por I
 
 - Node.js 20+ con Express 5
 - PostgreSQL
-- EJS como motor de vistas, CSS y JavaScript propios (sin frameworks de interfaz)
+- EJS como motor de vistas, CSS y JavaScript propios (sin frameworks de interfaz), estilo deliberadamente simple
 - Multer para la subida de imágenes
 - express-session con sesiones guardadas en PostgreSQL (connect-pg-simple)
-- IA gratuita y local (Entrega 2): lista de términos prohibidos, Transformers.js (zero-shot) y NSFWJS
+- IA gratuita y local: lista de términos prohibidos, Transformers.js (zero-shot) y NSFWJS con TensorFlow.js + sharp
 
 ## Roles
 
@@ -41,10 +41,32 @@ Edita `.env` con tu usuario y contraseña de PostgreSQL. Después:
 
 ```bash
 npm run db:setup   # crea la base "lapulga", las tablas, las categorías y el administrador
+npm run ia:probar  # opcional: descarga el modelo de texto (~300 MB, solo la primera vez) y prueba los filtros
 npm run dev        # http://localhost:3000
 ```
 
+Si el servidor no arranca, el mensaje en consola indica la causa: contraseña de PostgreSQL incorrecta en `.env`, base de datos sin crear o servicio detenido.
+
 El administrador inicial usa `ADMIN_EMAIL` y `ADMIN_PASSWORD` del archivo `.env`.
+
+## Moderación con IA
+
+Cada publicación nueva o editada pasa por tres filtros antes de mostrarse:
+
+| Filtro | Herramienta | Marca cuando |
+|---|---|---|
+| 1. Términos prohibidos | Lista propia (`src/services/ia/terminos.js`) | Aparece un término o sinónimo de armas, drogas, trata de personas, servicios sexuales u otros ilícitos. Detecta acentos, mayúsculas, l3tr4s cambiadas y palabras deletreadas, e ignora frases legítimas como "pistola de silicón". |
+| 2. Texto zero-shot | Transformers.js con `Xenova/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7` | Una categoría prohibida supera `UMBRAL_TEXTO` y además le gana a "artículo usado común". |
+| 3. Imágenes | NSFWJS (MobileNetV2) | Porn + Hentai supera `UMBRAL_NSFW`, o Sexy supera `UMBRAL_SEXY`. |
+
+Si algún filtro marca la publicación, se guarda en `reportes_ia`, la publicación queda «oculta – en revisión» y el usuario no puede publicar hasta que el administrador decida:
+
+- **Confirmar:** la publicación queda rechazada y el usuario recibe un strike. Con 3 strikes la cuenta se bloquea.
+- **Descartar:** la publicación se aprueba y se restablece el permiso de publicar.
+
+Los usuarios también pueden reportar publicaciones visibles, y el administrador puede ocultar algo que la IA dejó pasar. Esos casos, si se confirman, cuentan como falsos negativos. En `/admin/metricas` se calculan la precisión (VP / (VP + FP)) y la exhaustividad (VP / (VP + FN)) de la IA a partir de cada decisión.
+
+Los filtros 2 y 3 se pueden apagar con `IA_TEXTO=0` o `IA_IMAGEN=0` en `.env`. Si un modelo falla, el error se registra en consola y la lista de términos sigue funcionando.
 
 ## Estructura
 
@@ -52,13 +74,14 @@ El administrador inicial usa `ADMIN_EMAIL` y `ADMIN_PASSWORD` del archivo `.env`
 lapulga/
 ├── database/          schema.sql y script de instalación
 ├── public/            css, js e imágenes estáticas
+├── scripts/           prueba de los filtros de IA
 ├── src/
 │   ├── config/        conexión a PostgreSQL
 │   ├── controllers/   lógica de cada sección
 │   ├── middleware/    sesión, roles, avisos y subida de imágenes
 │   ├── models/        consultas SQL
 │   ├── routes/        definición de rutas
-│   ├── services/      moderación (filtros de IA)
+│   ├── services/      moderación y filtros de IA (ia/)
 │   └── utils/         validaciones y formato
 ├── uploads/           imágenes subidas (no se versionan)
 ├── views/             plantillas EJS
@@ -73,7 +96,7 @@ lapulga/
 | categorias        | id, nombre, slug                                                                          |
 | publicaciones     | id, usuario_id, categoria_id, titulo, descripcion, precio, es_donacion, estado            |
 | imagenes          | id, publicacion_id, ruta, orden                                                           |
-| reportes_ia       | id, publicacion_id, filtro, etiqueta, puntaje, decision_admin, admin_id, fecha            |
+| reportes_ia       | id, publicacion_id, filtro, etiqueta, puntaje, decision_admin, admin_id, fecha, reportado_por, motivo |
 | vistas_contacto   | id, publicacion_id, usuario_id, fecha                                                     |
 | resenas           | id, autor_id, receptor_id, publicacion_id, rol_receptor, calificacion, comentario, fecha  |
 
@@ -82,5 +105,5 @@ lapulga/
 ## Avance por entregas
 
 - [x] **Entrega 1.** Estructura MVC, esquema completo, registro e inicio de sesión con roles, publicaciones con hasta 5 imágenes, búsqueda y filtros, regla de precio/donación, contacto protegido con registro de consultas, perfiles públicos y cuenta.
-- [ ] **Entrega 2.** Moderación por IA (términos prohibidos, Transformers.js zero-shot, NSFWJS), panel del administrador, strikes, bloqueo y métricas de precisión.
+- [x] **Entrega 2.** Moderación por IA (términos prohibidos, Transformers.js zero-shot, NSFWJS), cola de revisión, strikes y bloqueo, reportes de usuarios, historial, métricas de precisión y gestión de usuarios. Estilo visual simplificado.
 - [ ] **Entrega 3.** Reseñas entre usuarios (1 a 5 estrellas, solo tras consultar el contacto, editables 7 días, promedio como vendedor y como comprador).

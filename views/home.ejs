@@ -1,6 +1,5 @@
 <%- include('partials/head') %>
 <%
-  // Construye la URL conservando los filtros actuales
   const url = (cambios) => {
     const p = { q: filtros.q, cat: filtros.categoria, donacion: filtros.donacion, orden: filtros.orden !== 'recientes' ? filtros.orden : '', ...cambios };
     if (!('pagina' in cambios)) delete p.pagina;
@@ -11,103 +10,55 @@
 %>
 
 <% if (!hayFiltros && filtros.pagina === 1) { %>
-<section class="portada" aria-labelledby="portada-titulo">
-  <div class="portada__texto">
-    <h1 id="portada-titulo">Lo que a ti te sobra, a alguien le <mark>hace falta</mark>.</h1>
-    <p>Vende lo que ya no usas o regálalo a quien lo necesite. Sin comisiones y sin chats eternos: el trato es directo por teléfono o WhatsApp.</p>
-    <div class="portada__acciones">
-      <% if (!usuario) { %>
-        <a class="btn btn--primario" href="/registro?rol=vendedor">Empezar a vender</a>
-        <a class="btn btn--plano" href="/?donacion=si">Ver donaciones <%- include('partials/icono', { n: 'flecha', t: 16 }) %></a>
-      <% } else if (usuario.rol === 'vendedor') { %>
-        <a class="btn btn--primario" href="/publicaciones/nueva">Publicar un artículo</a>
-        <a class="btn btn--plano" href="/mis-publicaciones">Mis publicaciones</a>
-      <% } else { %>
-        <a class="btn btn--primario" href="/?donacion=si">Ver donaciones</a>
-      <% } %>
-    </div>
-    <div class="portada__sello" aria-hidden="true"></div>
-  </div>
-  <div class="portada__reglas">
-    <div class="regla">
-      <div class="regla__icono"><%- include('partials/icono', { n: 'etiqueta' }) %></div>
-      <div><strong>Precio siempre visible</strong><span>Todas las publicaciones llevan precio. Si es 0, es una donación.</span></div>
-    </div>
-    <div class="regla">
-      <div class="regla__icono"><%- include('partials/icono', { n: 'candado' }) %></div>
-      <div><strong>Contacto protegido</strong><span>Solo quien tiene cuenta ve teléfonos y WhatsApp, y cada consulta queda registrada.</span></div>
-    </div>
-    <div class="regla">
-      <div class="regla__icono"><%- include('partials/icono', { n: 'escudo' }) %></div>
-      <div><strong>Publicaciones revisadas</strong><span>Lo sospechoso se oculta y lo revisa una persona antes de decidir.</span></div>
-    </div>
-  </div>
-</section>
+  <p class="centro">
+    Lo que a ti te sobra, a alguien le hace falta. Vende lo que ya no usas o regálalo.<br>
+    <span class="gris">Sin comisiones y sin chat: el trato es directo por teléfono o WhatsApp. Precio 0 = donación.</span>
+  </p>
 <% } %>
 
-<section class="filtros" aria-label="Filtros">
-  <nav class="chips" aria-label="Categorías">
-    <a class="chip" href="<%= url({ cat: '' }) %>" aria-current="<%= !filtros.categoria %>">Todo</a>
-    <% categorias.forEach(c => { %>
-      <a class="chip" href="<%= url({ cat: c.slug }) %>" aria-current="<%= filtros.categoria === c.slug %>"><%= c.nombre %> <small><%= c.total %></small></a>
-    <% }) %>
-  </nav>
+<div class="filtros">
+  <span class="gris">categorías:</span>
+  <a href="<%= url({ cat: '' }) %>" class="<%= !filtros.categoria ? 'actual' : '' %>">todas</a>
+  <% categorias.forEach(c => { %>
+    &middot; <a href="<%= url({ cat: c.slug }) %>" class="<%= filtros.categoria === c.slug ? 'actual' : '' %>"><%= c.nombre.toLowerCase() %></a> <small class="gris">(<%= c.total %>)</small>
+  <% }) %>
+  <br>
+  <span class="gris">mostrar:</span>
+  <a href="<%= url({ donacion: '' }) %>" class="<%= !filtros.donacion ? 'actual' : '' %>">todo</a> &middot;
+  <a href="<%= url({ donacion: 'no' }) %>" class="<%= filtros.donacion === 'no' ? 'actual' : '' %>">en venta</a> &middot;
+  <a href="<%= url({ donacion: 'si' }) %>" class="<%= filtros.donacion === 'si' ? 'actual' : '' %>">donaciones</a>
+  &nbsp; <span class="gris">ordenar:</span>
+  <a href="<%= url({ orden: '' }) %>" class="<%= filtros.orden === 'recientes' ? 'actual' : '' %>">recientes</a> &middot;
+  <a href="<%= url({ orden: 'precio_asc' }) %>" class="<%= filtros.orden === 'precio_asc' ? 'actual' : '' %>">precio menor</a> &middot;
+  <a href="<%= url({ orden: 'precio_desc' }) %>" class="<%= filtros.orden === 'precio_desc' ? 'actual' : '' %>">precio mayor</a>
+</div>
 
-  <div class="filtros__barra">
-    <div class="segmentado" role="group" aria-label="Tipo">
-      <a href="<%= url({ donacion: '' }) %>" aria-current="<%= !filtros.donacion %>">Todo</a>
-      <a href="<%= url({ donacion: 'no' }) %>" aria-current="<%= filtros.donacion === 'no' %>">En venta</a>
-      <a class="dona" href="<%= url({ donacion: 'si' }) %>" aria-current="<%= filtros.donacion === 'si' %>">Donaciones</a>
-    </div>
-
-    <p class="resultado" style="margin:0">
-      <strong><%= total %></strong> <%= total === 1 ? 'artículo' : 'artículos' %>
-      <% if (filtros.q) { %> para «<%= filtros.q %>»<% } %>
-      <% if (catActual) { %> en <%= catActual.nombre %><% } %>
-      <% if (hayFiltros) { %> · <a href="/">quitar filtros</a><% } %>
-    </p>
-
-    <form method="get" action="/" data-autoenvio>
-      <% if (filtros.q) { %><input type="hidden" name="q" value="<%= filtros.q %>"><% } %>
-      <% if (filtros.categoria) { %><input type="hidden" name="cat" value="<%= filtros.categoria %>"><% } %>
-      <% if (filtros.donacion) { %><input type="hidden" name="donacion" value="<%= filtros.donacion %>"><% } %>
-      <label class="sr-only" for="orden">Ordenar</label>
-      <select class="select" id="orden" name="orden">
-        <option value="recientes" <%= filtros.orden === 'recientes' ? 'selected' : '' %>>Más recientes</option>
-        <option value="precio_asc" <%= filtros.orden === 'precio_asc' ? 'selected' : '' %>>Precio: menor a mayor</option>
-        <option value="precio_desc" <%= filtros.orden === 'precio_desc' ? 'selected' : '' %>>Precio: mayor a menor</option>
-      </select>
-      <noscript><button class="btn btn--chico" type="submit">Ordenar</button></noscript>
-    </form>
-  </div>
-</section>
+<p class="gris chico">
+  <%= total %> <%= total === 1 ? 'artículo' : 'artículos' %><% if (filtros.q) { %> para "<%= filtros.q %>"<% } %><% if (catActual) { %> en <%= catActual.nombre.toLowerCase() %><% } %>
+  <% if (hayFiltros) { %> &middot; <a href="/">quitar filtros</a><% } %>
+</p>
 
 <% if (items.length) { %>
-  <div class="rejilla">
+  <div class="lista">
     <% items.forEach(p => { %><%- include('partials/tarjeta', { p }) %><% }) %>
   </div>
 
   <% if (paginas > 1) { %>
-    <nav class="paginacion" aria-label="Páginas">
-      <% if (filtros.pagina > 1) { %><a href="<%= url({ pagina: filtros.pagina - 1 }) %>" aria-label="Anterior">&larr;</a><% } else { %><span class="desactivado">&larr;</span><% } %>
-      <% for (let i = 1; i <= paginas; i++) { if (i === 1 || i === paginas || Math.abs(i - filtros.pagina) <= 1) { %>
-        <% if (i === filtros.pagina) { %><span aria-current="page"><%= i %></span><% } else { %><a href="<%= url({ pagina: i }) %>"><%= i %></a><% } %>
-      <% } else if (Math.abs(i - filtros.pagina) === 2) { %><span class="desactivado">…</span><% } } %>
-      <% if (filtros.pagina < paginas) { %><a href="<%= url({ pagina: filtros.pagina + 1 }) %>" aria-label="Siguiente">&rarr;</a><% } else { %><span class="desactivado">&rarr;</span><% } %>
-    </nav>
+    <div class="paginas">
+      <% if (filtros.pagina > 1) { %><a href="<%= url({ pagina: filtros.pagina - 1 }) %>">&laquo; anterior</a><% } %>
+      <% for (let i = 1; i <= paginas; i++) { %>
+        <% if (i === filtros.pagina) { %><span class="actual">[<%= i %>]</span><% } else { %><a href="<%= url({ pagina: i }) %>"><%= i %></a><% } %>
+      <% } %>
+      <% if (filtros.pagina < paginas) { %><a href="<%= url({ pagina: filtros.pagina + 1 }) %>">siguiente &raquo;</a><% } %>
+    </div>
   <% } %>
 <% } else { %>
-  <div class="vacio">
-    <%- include('partials/icono', { n: 'caja', t: 64 }) %>
-    <h2>Nada por aquí todavía</h2>
-    <% if (hayFiltros) { %>
-      <p>No encontramos artículos con esos filtros. Prueba con otra palabra o categoría.</p>
-      <a class="btn" href="/">Ver todo</a>
-    <% } else { %>
-      <p>Aún no hay publicaciones. ¡Sé la primera persona en publicar algo!</p>
-      <a class="btn btn--primario" href="<%= !usuario ? '/registro?rol=vendedor' : (usuario.rol === 'vendedor' ? '/publicaciones/nueva' : '/cuenta') %>">Publicar un artículo</a>
+  <p class="centro gris">
+    <% if (hayFiltros) { %>No hay artículos con esos filtros. <a href="/">ver todo</a>
+    <% } else { %>Todavía no hay publicaciones.
+      <a href="<%= !usuario ? '/registro?rol=vendedor' : (usuario.rol === 'vendedor' ? '/publicaciones/nueva' : '/cuenta') %>">publica la primera</a>.
     <% } %>
-  </div>
+  </p>
 <% } %>
 
 <%- include('partials/foot') %>

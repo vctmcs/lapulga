@@ -5,93 +5,79 @@
   const marcadas = [].concat(v.quitar_imagen || []).map(String);
 %>
 
-<div class="form-pagina">
-  <nav class="migas" aria-label="Ruta">
-    <a href="/mis-publicaciones">Mis publicaciones</a> <span>/</span> <span><%= pub ? 'Editar' : 'Nueva' %></span>
-  </nav>
-  <h1><%= pub ? 'Editar publicación' : 'Publica tu artículo' %></h1>
-  <p class="suave">Una buena foto y una descripción honesta hacen que te contacten más rápido.</p>
+<h1 class="centro"><%= pub ? 'Editar publicación' : 'Publicar artículo' %></h1>
+<p class="centro gris">Una foto clara y una descripción honesta hacen que te contacten más rápido.</p>
 
-  <% if (Object.keys(errores).length) { %>
-    <div class="aviso aviso--error" role="alert" style="margin-bottom:1.25rem">Revisa los campos marcados en rojo.</div>
-  <% } %>
+<% if (Object.keys(errores).length) { %><div class="msg msg-error">Revisa los campos marcados.</div><% } %>
 
-  <form class="caja caja--sombra" action="<%= accion %>" method="post" enctype="multipart/form-data" novalidate data-form-publicacion>
-    <div class="form-grid">
-      <div class="campo ancho">
-        <label for="titulo">Título</label>
-        <input class="entrada" id="titulo" name="titulo" maxlength="120" required value="<%= v.titulo || '' %>"
-               placeholder="Ej. Bicicleta rodada 26 con frenos nuevos" aria-invalid="<%= !!errores.titulo %>" data-contar="120">
+<form action="<%= accion %>" method="post" enctype="multipart/form-data" novalidate data-form-publicacion>
+  <table class="forma">
+    <tr>
+      <td><label for="titulo">título</label></td>
+      <td>
+        <input class="ancho" id="titulo" name="titulo" maxlength="120" value="<%= v.titulo || '' %>" placeholder="ej. bicicleta rodada 26" aria-invalid="<%= !!errores.titulo %>" data-contar="120">
         <% if (errores.titulo) { %><span class="error"><%= errores.titulo %></span><% } %>
-      </div>
-
-      <div class="campo">
-        <label for="categoria_id">Categoría</label>
-        <select class="entrada" id="categoria_id" name="categoria_id" required aria-invalid="<%= !!errores.categoria_id %>">
-          <option value="">Elige una…</option>
-          <% categorias.forEach(c => { %>
-            <option value="<%= c.id %>" <%= String(v.categoria_id) === String(c.id) ? 'selected' : '' %>><%= c.nombre %></option>
-          <% }) %>
+      </td>
+    </tr>
+    <tr>
+      <td><label for="categoria_id">categoría</label></td>
+      <td>
+        <select id="categoria_id" name="categoria_id" aria-invalid="<%= !!errores.categoria_id %>">
+          <option value="">-- elige --</option>
+          <% categorias.forEach(c => { %><option value="<%= c.id %>" <%= String(v.categoria_id) === String(c.id) ? 'selected' : '' %>><%= c.nombre %></option><% }) %>
         </select>
         <% if (errores.categoria_id) { %><span class="error"><%= errores.categoria_id %></span><% } %>
-      </div>
-
-      <div class="campo">
-        <label for="precio">Precio</label>
-        <div class="precio-campo <%= errores.precio ? 'invalido' : '' %>">
-          <span>$</span>
-          <input id="precio" name="precio" inputmode="decimal" required value="<%= v.precio ?? '' %>" placeholder="0.00"
-                 aria-describedby="precio-ayuda" aria-invalid="<%= !!errores.precio %>" data-precio>
-        </div>
-        <div class="precio-vista" id="precio-ayuda" data-precio-vista>Obligatorio. Escribe <strong class="mono">0</strong> si lo quieres regalar.</div>
+      </td>
+    </tr>
+    <tr>
+      <td><label for="precio">precio $</label></td>
+      <td>
+        <input id="precio" name="precio" inputmode="decimal" size="12" value="<%= v.precio ?? '' %>" placeholder="0.00" aria-invalid="<%= !!errores.precio %>" data-precio>
+        <span class="ayuda" data-precio-vista>Obligatorio. Escribe 0 si lo quieres regalar.</span>
         <% if (errores.precio) { %><span class="error"><%= errores.precio %></span><% } %>
-      </div>
-
-      <div class="campo ancho">
-        <label for="descripcion">Descripción</label>
-        <textarea class="entrada" id="descripcion" name="descripcion" maxlength="3000" required aria-invalid="<%= !!errores.descripcion %>"
-                  placeholder="Estado, medidas, tiempo de uso, si tiene detalles, zona de entrega…" data-contar="3000"><%= v.descripcion || '' %></textarea>
+      </td>
+    </tr>
+    <tr>
+      <td><label for="descripcion">descripción</label></td>
+      <td>
+        <textarea id="descripcion" name="descripcion" maxlength="3000" placeholder="estado, medidas, tiempo de uso, detalles, zona de entrega..." aria-invalid="<%= !!errores.descripcion %>" data-contar="3000"><%= v.descripcion || '' %></textarea>
         <% if (errores.descripcion) { %><span class="error"><%= errores.descripcion %></span><% } %>
-      </div>
-
-      <div class="campo ancho">
-        <span class="etiqueta-campo">Fotos <span class="suave" style="font-weight:500">(máximo <%= maxImagenes %>, JPG, PNG o WEBP de hasta 5 MB)</span></span>
-
+      </td>
+    </tr>
+    <tr>
+      <td>fotos</td>
+      <td>
         <% if (imagenes.length) { %>
           <span class="ayuda">Marca las fotos que quieras quitar.</span>
-          <div class="miniaturas">
+          <div class="fotos">
             <% imagenes.forEach((img, i) => { %>
-              <div class="miniatura">
-                <img src="/uploads/<%= img.ruta %>" alt="Foto <%= i + 1 %>">
-                <% if (i === 0) { %><span class="marca">Portada</span><% } %>
-                <input type="checkbox" id="quitar-<%= img.id %>" name="quitar_imagen" value="<%= img.id %>" <%= marcadas.includes(String(img.id)) ? 'checked' : '' %>>
-                <label for="quitar-<%= img.id %>"><%- include('../partials/icono', { n: 'basura', t: 14 }) %> Quitar</label>
-              </div>
+              <label class="foto">
+                <input type="checkbox" name="quitar_imagen" value="<%= img.id %>" <%= marcadas.includes(String(img.id)) ? 'checked' : '' %> style="display:none">
+                <img src="/uploads/<%= img.ruta %>" alt="foto <%= i + 1 %>">
+                <%= i === 0 ? 'portada · ' : '' %><span style="text-decoration:underline;cursor:pointer;color:#ff5236">quitar</span>
+              </label>
             <% }) %>
           </div>
+          <br>
         <% } %>
-
-        <label class="zona-fotos" data-zona-fotos style="margin-top:.5rem">
+        <label class="zona-fotos" data-zona-fotos>
           <input type="file" name="imagenes" accept="image/jpeg,image/png,image/webp" multiple data-fotos data-max="<%= maxImagenes - imagenes.length %>">
-          <%- include('../partials/icono', { n: 'camara', t: 40 }) %>
-          <strong><%= imagenes.length ? 'Agregar más fotos' : 'Arrastra tus fotos aquí' %></strong>
-          <small>o haz clic para elegirlas · la primera será la portada</small>
+          <%= imagenes.length ? 'agregar más fotos' : 'elige o arrastra tus fotos aquí' %><br>
+          <small class="gris">máximo <%= maxImagenes %> en total &middot; jpg, png o webp de hasta 5 MB &middot; la primera es la portada</small>
         </label>
-        <div class="miniaturas" data-vista-fotos></div>
+        <div class="fotos" data-vista-fotos></div>
         <% if (errores.imagenes) { %><span class="error"><%= errores.imagenes %></span><% } %>
-      </div>
-
-      <div class="ancho aviso-moderacion">
-        <%- include('../partials/icono', { n: 'escudo' }) %>
-        <span>Al publicar, el texto y las fotos pasan por una revisión automática. Si algo parece prohibido, la publicación se oculta hasta que un administrador la revise y no podrás publicar mientras tanto.</span>
-      </div>
-    </div>
-
-    <div class="form-acciones">
-      <a class="btn btn--plano" href="<%= pub ? '/publicaciones/' + pub.id : '/mis-publicaciones' %>">Cancelar</a>
-      <button class="btn btn--primario" type="submit" data-enviar><%= pub ? 'Guardar cambios' : 'Publicar' %></button>
-    </div>
-  </form>
-</div>
+      </td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>
+        <p class="chico gris">Al publicar, el texto y las fotos pasan por una revisión automática. Si algo parece prohibido, la publicación se oculta hasta que un administrador la revise y no podrás publicar mientras tanto.</p>
+        <button type="submit" class="amarillo" data-enviar><%= pub ? 'guardar cambios' : 'publicar' %></button>
+        &nbsp; <a href="<%= pub ? '/publicaciones/' + pub.id : '/mis-publicaciones' %>">cancelar</a>
+      </td>
+    </tr>
+  </table>
+</form>
 
 <%- include('../partials/foot') %>

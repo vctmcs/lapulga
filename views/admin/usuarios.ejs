@@ -1,0 +1,28 @@
+<%- include('../partials/head') %>
+<%- include('menu') %>
+
+<table class="tabla">
+  <tr><th>usuario</th><th>rol</th><th class="num">activas</th><th class="num">rechazadas</th><th class="num">strikes</th><th>estado</th><th></th></tr>
+  <% usuarios.forEach(u => { %>
+    <tr>
+      <td><a href="/usuarios/<%= u.id %>"><%= u.nombre %></a><br><small class="gris"><%= u.email %></small></td>
+      <td><%= u.rol %></td>
+      <td class="num"><%= u.activas %></td>
+      <td class="num"><%= u.rechazadas %></td>
+      <td class="num" style="color:<%= u.strikes ? '#ff5236' : 'inherit' %>"><%= u.strikes %>/3</td>
+      <td>
+        <% if (u.bloqueado) { %><span style="color:#ff5236">bloqueado</span>
+        <% } else if (!u.puede_publicar) { %><span style="color:#ffcc33">en revisión</span>
+        <% } else { %><span class="gris">activo</span><% } %>
+      </td>
+      <td>
+        <% if (u.bloqueado) { %>
+          <form class="enlinea" action="/admin/usuarios/<%= u.id %>/desbloquear" method="post" data-confirmar="¿Desbloquear a <%= u.nombre %> y reiniciar sus strikes?"><button class="enlace" type="submit">desbloquear</button></form>
+        <% } %>
+      </td>
+    </tr>
+  <% }) %>
+</table>
+<% if (!usuarios.length) { %><p class="centro gris">No hay usuarios registrados.</p><% } %>
+
+<%- include('../partials/foot') %>

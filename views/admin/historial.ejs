@@ -1,0 +1,23 @@
+<%- include('../partials/head') %>
+<%- include('menu') %>
+
+<% if (!decisiones.length) { %>
+  <p class="centro gris">Todavía no hay decisiones registradas.</p>
+<% } else { %>
+  <table class="tabla">
+    <tr><th>fecha</th><th>publicación</th><th>usuario</th><th>filtros</th><th>detecciones</th><th>decisión</th><th>admin</th></tr>
+    <% decisiones.forEach(d => { %>
+      <tr>
+        <td class="chico"><%= f.fecha(d.fecha_decision) %></td>
+        <td><a href="/publicaciones/<%= d.id %>"><%= d.titulo %></a></td>
+        <td><%= d.usuario %></td>
+        <td class="chico"><%= d.filtros %></td>
+        <td class="chico"><%= d.etiquetas %></td>
+        <td style="color:<%= d.decision_admin === 'confirmada' ? '#ff5236' : '#66cc66' %>"><%= d.decision_admin %></td>
+        <td class="chico"><%= d.admin || '-' %></td>
+      </tr>
+    <% }) %>
+  </table>
+<% } %>
+
+<%- include('../partials/foot') %>

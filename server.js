@@ -72,4 +72,24 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
   });
 });
 
-app.listen(PORT, () => console.log(`La Pulga corriendo en http://localhost:${PORT}`));
+// Antes de abrir el puerto se comprueba la base de datos, para no servir páginas con error 500
+async function comprobarBaseDeDatos() {
+  try {
+    await pool.query('SELECT 1 FROM usuarios LIMIT 1');
+  } catch (err) {
+    const causas = {
+      '28P01': 'La contraseña de PostgreSQL es incorrecta. Revisa PGUSER y PGPASSWORD en el archivo .env.',
+      '3D000': `La base de datos "${process.env.PGDATABASE || 'lapulga'}" no existe. Ejecuta: npm run db:setup`,
+      '42P01': 'Faltan las tablas. Ejecuta: npm run db:setup',
+      ECONNREFUSED: 'PostgreSQL no responde. Verifica que el servicio esté iniciado y que PGHOST/PGPORT sean correctos.',
+    };
+    console.error('\nNo se pudo conectar a la base de datos.');
+    console.error('→ ' + (causas[err.code] || err.message) + '\n');
+    process.exit(1);
+  }
+}
+
+comprobarBaseDeDatos().then(() => {
+  app.listen(PORT, () => console.log(`La Pulga corriendo en http://localhost:${PORT}`));
+  require('./src/services/moderacion').precargar(); // carga los modelos de IA en segundo plano
+});

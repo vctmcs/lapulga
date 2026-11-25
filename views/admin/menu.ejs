@@ -1,0 +1,7 @@
+<h1 class="centro">Moderación</h1>
+<div class="submenu">
+  <a href="/admin" class="<%= seccion === 'cola' ? 'actual' : '' %>">cola de revisión<% if (typeof pendientes !== 'undefined' && pendientes) { %> (<%= pendientes %>)<% } %></a> |
+  <a href="/admin/historial" class="<%= seccion === 'historial' ? 'actual' : '' %>">historial</a> |
+  <a href="/admin/metricas" class="<%= seccion === 'metricas' ? 'actual' : '' %>">precisión de la IA</a> |
+  <a href="/admin/usuarios" class="<%= seccion === 'usuarios' ? 'actual' : '' %>">usuarios y strikes</a>
+</div>

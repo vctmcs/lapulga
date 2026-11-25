@@ -3,71 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= titulo ? `${titulo} · La Pulga` : 'La Pulga' %></title>
-  <meta name="description" content="La Pulga: compra, vende y dona artículos usados cerca de ti. Contacto directo por teléfono o WhatsApp.">
-  <meta name="theme-color" content="#f4efe4">
+  <title><%= titulo ? `${titulo} - La Pulga` : 'La Pulga' %></title>
+  <meta name="description" content="La Pulga: compra, vende y dona artículos usados. Contacto directo por teléfono o WhatsApp.">
   <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
-<a class="sr-only" href="#contenido">Saltar al contenido</a>
-<header class="cabecera">
-  <div class="contenedor cabecera__fila">
-    <%- include('logo') %>
+<div class="pagina">
 
-    <form class="buscador" action="/" method="get" role="search">
-      <label class="sr-only" for="buscar">Buscar artículos</label>
-      <input id="buscar" type="search" name="q" placeholder="Busca bicis, libros, muebles…" value="<%= typeof query !== 'undefined' && query.q ? query.q : '' %>" maxlength="80">
-      <button type="submit" aria-label="Buscar"><%- include('icono', { n: 'buscar' }) %></button>
-    </form>
+<div class="cabecera">
+  <a class="logo" href="/"><b>la pulga</b><span>artículos usados y donaciones</span></a>
 
-    <nav class="nav" aria-label="Principal">
-      <a class="nav__link nav__link--texto" href="/?donacion=si" <%= ruta === '/' && query.donacion === 'si' ? 'aria-current=page' : '' %>>Donaciones</a>
-
-      <% if (!usuario) { %>
-        <a class="nav__link" href="/login" <%= ruta === '/login' ? 'aria-current=page' : '' %>>Entrar</a>
-        <a class="btn btn--primario btn--chico" href="/registro?rol=vendedor"><%- include('icono', { n: 'mas', t: 16 }) %> Vender</a>
-      <% } else { %>
-        <% if (usuario.rol === 'vendedor') { %>
-          <a class="btn btn--primario btn--chico" href="/publicaciones/nueva"><%- include('icono', { n: 'mas', t: 16 }) %> Publicar</a>
-        <% } %>
-        <% if (usuario.rol === 'admin') { %>
-          <a class="btn btn--negro btn--chico" href="/admin"><%- include('icono', { n: 'escudo', t: 16 }) %> Moderación</a>
-        <% } %>
-        <details class="menu">
-          <summary>
-            <span class="avatar"><%= f.iniciales(usuario.nombre) %></span>
-            <span class="menu__nombre"><%= usuario.nombre.split(' ')[0] %></span>
-          </summary>
-          <div class="menu__panel">
-            <div class="menu__cab"><strong><%= usuario.nombre %></strong><%= usuario.email %></div>
-            <hr>
-            <% if (usuario.rol === 'vendedor') { %>
-              <a href="/mis-publicaciones">Mis publicaciones</a>
-              <a href="/usuarios/<%= usuario.id %>">Ver mi perfil público</a>
-            <% } %>
-            <% if (usuario.rol === 'admin') { %>
-              <a href="/admin">Panel de moderación</a>
-            <% } %>
-            <a href="/cuenta">Mi cuenta</a>
-            <hr>
-            <form action="/logout" method="post"><button type="submit">Cerrar sesión</button></form>
-          </div>
-        </details>
+  <div class="menu">
+    <a href="/">inicio</a> <span class="sep">|</span>
+    <a href="/?donacion=si">donaciones</a> <span class="sep">|</span>
+    <% if (!usuario) { %>
+      <a href="/login">entrar</a> <span class="sep">|</span>
+      <a href="/registro">registrarse</a> <span class="sep">|</span>
+      <a href="/registro?rol=vendedor">vender</a>
+    <% } else { %>
+      <% if (usuario.rol === 'vendedor') { %>
+        <a href="/publicaciones/nueva">publicar</a> <span class="sep">|</span>
+        <a href="/mis-publicaciones">mis publicaciones</a> <span class="sep">|</span>
       <% } %>
-    </nav>
+      <% if (usuario.rol === 'admin') { %>
+        <a href="/admin">moderación</a><% if (typeof pendientes !== 'undefined' && pendientes) { %> <a class="contador" href="/admin" title="casos pendientes"><%= pendientes %></a><% } %> <span class="sep">|</span>
+      <% } %>
+      <a href="/cuenta">mi cuenta</a> <span class="sep">|</span>
+      <form class="enlinea" action="/logout" method="post"><button class="enlace" type="submit" style="font-size:12px">salir</button></form>
+      <br><small class="gris">sesión: <%= usuario.nombre %> (<%= usuario.rol %>)</small>
+    <% } %>
   </div>
-</header>
+
+  <form class="buscar" action="/" method="get" role="search">
+    <label class="sr-only" for="buscar">Buscar</label>
+    <input id="buscar" type="search" name="q" maxlength="80" placeholder="buscar..." value="<%= typeof query !== 'undefined' && query.q ? query.q : '' %>">
+    <button type="submit">buscar</button>
+  </form>
+</div>
+
+<hr>
+
+<% if (usuario && usuario.rol === 'vendedor' && !usuario.puede_publicar) { %>
+  <div class="msg msg-alerta">Una de tus publicaciones fue reportada y está oculta en revisión. No puedes publicar hasta que el administrador la revise.</div>
+<% } %>
+<% (flash || []).forEach(m => { %>
+  <div class="msg msg-<%= m.tipo %>" role="status"><button type="button" data-cerrar aria-label="cerrar">x</button><%= m.mensaje %></div>
+<% }) %>
 
 <main id="contenido">
-  <div class="contenedor">
-    <% if (flash && flash.length) { %>
-      <div class="avisos" role="status">
-        <% flash.forEach(m => { %>
-          <div class="aviso aviso--<%= m.tipo %>"><span><%= m.mensaje %></span><button type="button" aria-label="Cerrar aviso" data-cerrar>&times;</button></div>
-        <% }) %>
-      </div>
-    <% } %>

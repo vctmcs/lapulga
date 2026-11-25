@@ -2,6 +2,7 @@ const { Router } = require('express');
 const auth = require('../controllers/authController');
 const pubs = require('../controllers/publicacionesController');
 const perfil = require('../controllers/perfilController');
+const admin = require('../controllers/adminController');
 const { requiereSesion, soloInvitados, requiereRol } = require('../middleware/auth');
 const { imagenesPublicacion } = require('../middleware/upload');
 
@@ -20,8 +21,9 @@ r.get('/registro', soloInvitados, auth.formRegistro);
 r.post('/registro', soloInvitados, auth.registro);
 r.post('/logout', auth.logout);
 
-// Contacto protegido (cualquier usuario con sesión)
+// Contacto protegido y reportes (cualquier usuario con sesión)
 r.post('/publicaciones/:id/contacto', requiereSesion, pubs.contacto);
+r.post('/publicaciones/:id/reportar', requiereSesion, pubs.reportar);
 
 // Vendedor
 r.get('/mis-publicaciones', requiereRol('vendedor'), pubs.mias);
@@ -37,9 +39,14 @@ r.post('/cuenta', requiereSesion, perfil.editar);
 r.post('/cuenta/password', requiereSesion, perfil.cambiarPassword);
 r.post('/cuenta/vender', requiereRol('comprador'), perfil.volverseVendedor);
 
-// Administración (el panel completo llega en la Entrega 2)
-r.get('/admin', requiereRol('admin'), (req, res) =>
-  res.render('admin/pendiente', { titulo: 'Panel de moderación' })
-);
+// Administración
+const soloAdmin = requiereRol('admin');
+r.get('/admin', soloAdmin, admin.cola);
+r.post('/admin/publicaciones/:id/decidir', soloAdmin, admin.decidir);
+r.post('/publicaciones/:id/ocultar', soloAdmin, pubs.ocultar);
+r.get('/admin/historial', soloAdmin, admin.historial);
+r.get('/admin/metricas', soloAdmin, admin.metricas);
+r.get('/admin/usuarios', soloAdmin, admin.usuarios);
+r.post('/admin/usuarios/:id/desbloquear', soloAdmin, admin.desbloquear);
 
 module.exports = r;

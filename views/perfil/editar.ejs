@@ -1,71 +1,78 @@
 <%- include('../partials/head') %>
 <% const v = valores || {}; %>
 
-<h1>Mi cuenta</h1>
+<h1 class="centro">Mi cuenta</h1>
+<p class="centro gris">
+  <%= usuario.email %> &middot; cuenta de <%= usuario.rol === 'admin' ? 'administrador' : usuario.rol %> desde <%= f.fecha(usuario.creado_en) %>
+  <% if (usuario.strikes > 0) { %><br><span style="color:#ff5236">strikes: <%= usuario.strikes %> de 3</span><% } %>
+</p>
 
-<div class="cuenta">
-  <form class="caja caja--sombra" action="/cuenta" method="post" novalidate data-registro>
-    <h2>Datos de contacto</h2>
-    <p class="suave" style="font-size:.92rem">Tu teléfono y WhatsApp solo los ven usuarios con sesión iniciada, y cada consulta queda registrada.</p>
-    <div class="form-grid">
-      <div class="campo ancho">
-        <label for="nombre">Nombre</label>
-        <input class="entrada" id="nombre" name="nombre" required maxlength="100" value="<%= v.nombre || '' %>" aria-invalid="<%= !!errores.nombre %>">
+<h2 class="centro">Datos de contacto</h2>
+<p class="centro chico gris">Tu teléfono y WhatsApp solo los ven usuarios con sesión iniciada, y cada consulta queda registrada.</p>
+<form action="/cuenta" method="post" novalidate data-registro>
+  <table class="forma">
+    <tr>
+      <td><label for="nombre">nombre</label></td>
+      <td>
+        <input class="ancho" id="nombre" name="nombre" maxlength="100" value="<%= v.nombre || '' %>" aria-invalid="<%= !!errores.nombre %>">
         <% if (errores.nombre) { %><span class="error"><%= errores.nombre %></span><% } %>
-      </div>
-      <div class="campo">
-        <label for="telefono">Teléfono</label>
-        <input class="entrada" id="telefono" name="telefono" type="tel" value="<%= v.telefono || '' %>" placeholder="55 1234 5678" aria-invalid="<%= !!errores.telefono %>">
+      </td>
+    </tr>
+    <tr>
+      <td><label for="telefono">teléfono</label></td>
+      <td>
+        <input id="telefono" name="telefono" type="tel" value="<%= v.telefono || '' %>" placeholder="55 1234 5678" aria-invalid="<%= !!errores.telefono %>">
         <% if (errores.telefono) { %><span class="error"><%= errores.telefono %></span><% } %>
-      </div>
-      <div class="campo">
-        <label for="whatsapp">WhatsApp</label>
-        <input class="entrada" id="whatsapp" name="whatsapp" type="tel" value="<%= v.whatsapp || '' %>" placeholder="55 1234 5678" aria-invalid="<%= !!errores.whatsapp %>" data-whatsapp>
+      </td>
+    </tr>
+    <tr>
+      <td><label for="whatsapp">whatsapp</label></td>
+      <td>
+        <input id="whatsapp" name="whatsapp" type="tel" value="<%= v.whatsapp || '' %>" placeholder="55 1234 5678" aria-invalid="<%= !!errores.whatsapp %>" data-whatsapp>
+        <label class="chico"><input type="checkbox" name="mismo_whatsapp" value="1" <%= v.mismo_whatsapp ? 'checked' : '' %> data-mismo-whatsapp> es el mismo número</label>
         <% if (errores.whatsapp) { %><span class="error"><%= errores.whatsapp %></span><% } %>
-      </div>
-      <label class="casilla ancho"><input type="checkbox" name="mismo_whatsapp" value="1" <%= v.mismo_whatsapp ? 'checked' : '' %> data-mismo-whatsapp> Mi WhatsApp es el mismo número</label>
-    </div>
-    <div class="form-acciones"><button class="btn btn--primario" type="submit">Guardar</button></div>
+      </td>
+    </tr>
+    <tr><td></td><td><button type="submit" class="amarillo">guardar</button></td></tr>
+  </table>
+</form>
+
+<% if (usuario.rol === 'comprador') { %>
+  <hr>
+  <form action="/cuenta/vender" method="post" class="centro">
+    <h2>¿Quieres vender o donar?</h2>
+    <p class="chico gris">Cambia tu cuenta a vendedor para publicar. Necesitas un teléfono o WhatsApp guardado.</p>
+    <button type="submit">convertirme en vendedor</button>
   </form>
+<% } %>
 
-  <aside>
-    <div class="caja">
-      <span class="avatar" style="width:52px;height:52px;font-size:1.1rem;margin-bottom:.6rem"><%= f.iniciales(usuario.nombre) %></span>
-      <strong style="display:block"><%= usuario.email %></strong>
-      <span class="suave" style="font-size:.9rem">Cuenta de <%= usuario.rol === 'admin' ? 'administrador' : usuario.rol %> · desde <%= f.fecha(usuario.creado_en) %></span>
-      <% if (usuario.strikes > 0) { %><p class="error" style="margin:.6rem 0 0;color:var(--rojo);font-weight:700">Strikes: <%= usuario.strikes %> de 3</p><% } %>
-    </div>
-
-    <% if (usuario.rol === 'comprador') { %>
-      <form class="caja" action="/cuenta/vender" method="post" style="background:#fff8d6">
-        <h3>¿Quieres vender o donar?</h3>
-        <p style="font-size:.92rem">Cambia tu cuenta a vendedor para publicar. Necesitas un teléfono o WhatsApp guardado.</p>
-        <button class="btn btn--bloque" type="submit">Convertirme en vendedor</button>
-      </form>
-    <% } %>
-
-    <details class="caja desplegable" <%= typeof abrirPass !== 'undefined' && abrirPass ? 'open' : '' %>>
-      <summary>Cambiar contraseña</summary>
-      <form action="/cuenta/password" method="post" novalidate style="display:grid;gap:.9rem">
-        <div class="campo">
-          <label for="actual">Contraseña actual</label>
-          <input class="entrada" id="actual" name="actual" type="password" autocomplete="current-password" aria-invalid="<%= !!erroresPass.actual %>">
-          <% if (erroresPass.actual) { %><span class="error"><%= erroresPass.actual %></span><% } %>
-        </div>
-        <div class="campo">
-          <label for="nueva">Nueva contraseña</label>
-          <input class="entrada" id="nueva" name="nueva" type="password" autocomplete="new-password" aria-invalid="<%= !!erroresPass.nueva %>">
-          <% if (erroresPass.nueva) { %><span class="error"><%= erroresPass.nueva %></span><% } %>
-        </div>
-        <div class="campo">
-          <label for="confirmar">Confirmar</label>
-          <input class="entrada" id="confirmar" name="confirmar" type="password" autocomplete="new-password" aria-invalid="<%= !!erroresPass.confirmar %>">
-          <% if (erroresPass.confirmar) { %><span class="error"><%= erroresPass.confirmar %></span><% } %>
-        </div>
-        <button class="btn btn--negro" type="submit">Actualizar contraseña</button>
-      </form>
-    </details>
-  </aside>
-</div>
+<hr>
+<h2 class="centro">Cambiar contraseña</h2>
+<form action="/cuenta/password" method="post" novalidate>
+  <table class="forma">
+    <tr>
+      <td><label for="actual">actual</label></td>
+      <td>
+        <input class="ancho" id="actual" name="actual" type="password" autocomplete="current-password" aria-invalid="<%= !!erroresPass.actual %>">
+        <% if (erroresPass.actual) { %><span class="error"><%= erroresPass.actual %></span><% } %>
+      </td>
+    </tr>
+    <tr>
+      <td><label for="nueva">nueva</label></td>
+      <td>
+        <input class="ancho" id="nueva" name="nueva" type="password" autocomplete="new-password" aria-invalid="<%= !!erroresPass.nueva %>">
+        <% if (erroresPass.nueva) { %><span class="error"><%= erroresPass.nueva %></span><% } %>
+      </td>
+    </tr>
+    <tr>
+      <td><label for="confirmar">confirmar</label></td>
+      <td>
+        <input class="ancho" id="confirmar" name="confirmar" type="password" autocomplete="new-password" aria-invalid="<%= !!erroresPass.confirmar %>">
+        <% if (erroresPass.confirmar) { %><span class="error"><%= erroresPass.confirmar %></span><% } %>
+      </td>
+    </tr>
+    <tr><td></td><td><button type="submit">actualizar contraseña</button></td></tr>
+  </table>
+</form>
 
 <%- include('../partials/foot') %>

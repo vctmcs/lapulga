@@ -1,101 +1,95 @@
 <%- include('../partials/head') %>
+<% const esAdmin = usuario && usuario.rol === 'admin'; %>
 
-<nav class="migas" aria-label="Ruta">
-  <a href="/">Inicio</a> <span>/</span>
-  <% if (pub.categoria) { %><a href="/?cat=<%= pub.categoria_slug %>"><%= pub.categoria %></a> <span>/</span><% } %>
-  <span aria-current="page"><%= pub.titulo %></span>
-</nav>
+<p class="chico gris">
+  <a href="/">inicio</a> &raquo;
+  <% if (pub.categoria) { %><a href="/?cat=<%= pub.categoria_slug %>"><%= pub.categoria.toLowerCase() %></a> &raquo;<% } %>
+  <%= pub.titulo %>
+</p>
 
-<% if (pub.estado !== 'publicada') { %>
-  <div class="estado-banda" style="margin-bottom:1.25rem">
-    <%- include('../partials/icono', { n: 'info' }) %>
-    <% if (pub.estado === 'en_revision') { %>Esta publicación está oculta mientras el administrador la revisa. Solo tú la puedes ver.<% } %>
-    <% if (pub.estado === 'rechazada') { %>Esta publicación fue rechazada por moderación y no es visible para nadie más.<% } %>
-    <% if (pub.estado === 'vendida') { %><%= pub.es_donacion ? 'Este artículo ya fue entregado.' : 'Este artículo ya se vendió.' %><% } %>
-  </div>
-<% } %>
+<% if (pub.estado === 'en_revision') { %><div class="msg msg-alerta">Esta publicación está oculta mientras el administrador la revisa.</div><% } %>
+<% if (pub.estado === 'rechazada') { %><div class="msg msg-error">Esta publicación fue rechazada por moderación y nadie más la puede ver.</div><% } %>
+<% if (pub.estado === 'vendida') { %><div class="msg msg-info"><%= pub.es_donacion ? 'Este artículo ya fue entregado.' : 'Este artículo ya se vendió.' %></div><% } %>
 
-<article class="detalle">
-  <div class="galeria" data-galeria>
-    <div class="galeria__principal">
+<div class="detalle">
+  <div data-galeria>
+    <div class="principal">
       <img src="<%= imagenes.length ? '/uploads/' + imagenes[0].ruta : '/img/sin-foto.svg' %>" alt="<%= pub.titulo %>" data-galeria-principal>
     </div>
     <% if (imagenes.length > 1) { %>
-      <div class="galeria__miniaturas">
+      <div class="miniaturas">
         <% imagenes.forEach((img, i) => { %>
-          <button type="button" data-src="/uploads/<%= img.ruta %>" aria-current="<%= i === 0 %>" aria-label="Ver foto <%= i + 1 %>">
-            <img src="/uploads/<%= img.ruta %>" alt="" loading="lazy">
-          </button>
+          <button type="button" data-src="/uploads/<%= img.ruta %>" aria-current="<%= i === 0 %>" aria-label="foto <%= i + 1 %>"><img src="/uploads/<%= img.ruta %>" alt="" loading="lazy"></button>
         <% }) %>
       </div>
     <% } %>
   </div>
 
-  <div class="ficha">
-    <div>
-      <% if (pub.categoria) { %><a class="ficha__cat" href="/?cat=<%= pub.categoria_slug %>"><%= pub.categoria %></a><% } %>
-      <h1><%= pub.titulo %></h1>
-      <p class="ficha__fecha" style="margin:0.4rem 0 0">Publicado <%= f.hace(pub.creado_en) %></p>
-    </div>
+  <div>
+    <h1><%= pub.titulo %></h1>
+    <p>
+      <span class="<%= pub.es_donacion ? 'dona' : 'precio' %>" style="font-size:20px"><%= f.precio(pub.precio) %></span><br>
+      <small class="gris"><%= pub.categoria || 'sin categoría' %> &middot; publicado <%= f.hace(pub.creado_en) %></small>
+    </p>
 
-    <span class="precio precio--grande <%= pub.es_donacion ? 'precio--dona' : '' %>"><%= f.precio(pub.precio) %></span>
-
-    <a class="caja vendedor" href="/usuarios/<%= pub.usuario_id %>">
-      <span class="avatar"><%= f.iniciales(pub.vendedor) %></span>
-      <span><strong><%= pub.vendedor %></strong><small>En La Pulga desde <%= f.fecha(pub.vendedor_desde) %></small></span>
-    </a>
+    <p>
+      <%= pub.es_donacion ? 'Dona' : 'Vende' %>: <a href="/usuarios/<%= pub.usuario_id %>"><%= pub.vendedor %></a><br>
+      <small class="gris">en la pulga desde <%= f.fecha(pub.vendedor_desde) %></small>
+    </p>
 
     <% if (esDueno) { %>
-      <div class="caja caja--sombra">
-        <h3>Es tu publicación</h3>
-        <p class="suave" style="font-size:.9rem">Los compradores con cuenta ven tu teléfono y WhatsApp desde aquí.</p>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-          <% if (pub.estado !== 'en_revision') { %>
-            <a class="btn btn--chico" href="/publicaciones/<%= pub.id %>/editar"><%- include('../partials/icono', { n: 'lapiz', t: 16 }) %> Editar</a>
-          <% } %>
-          <a class="btn btn--chico btn--plano" href="/mis-publicaciones">Mis publicaciones</a>
-        </div>
+      <div class="caja punteada">
+        Es tu publicación.
+        <% if (pub.estado === 'publicada' || pub.estado === 'vendida') { %><a href="/publicaciones/<%= pub.id %>/editar">editar</a> &middot;<% } %>
+        <a href="/mis-publicaciones">mis publicaciones</a>
       </div>
     <% } else if (pub.estado === 'publicada') { %>
-      <section class="caja caja--sombra contacto" aria-labelledby="contacto-titulo" data-contacto data-id="<%= pub.id %>">
-        <h2 id="contacto-titulo" style="font-size:1.15rem;margin:0">Contactar <%= pub.es_donacion ? 'a quien dona' : 'al vendedor' %></h2>
-
+      <div class="caja" data-contacto data-id="<%= pub.id %>">
+        <h3>Contacto</h3>
         <% if (!usuario) { %>
-          <div class="contacto__bloqueado">
-            <span class="contacto__candado"><%- include('../partials/icono', { n: 'candado' }) %></span>
-            <p style="margin:0">El teléfono y el WhatsApp solo se muestran a usuarios registrados. Crear una cuenta es gratis.</p>
-          </div>
-          <div style="display:flex;gap:.6rem;flex-wrap:wrap">
-            <a class="btn btn--primario" href="/registro">Crear cuenta</a>
-            <a class="btn" href="/login">Ya tengo cuenta</a>
-          </div>
+          <p>El teléfono y el WhatsApp solo se muestran a usuarios registrados.</p>
+          <a href="/registro">crear cuenta gratis</a> &middot; <a href="/login">entrar</a>
         <% } else { %>
-          <div class="contacto__datos" data-contacto-datos hidden></div>
-          <button class="btn btn--negro btn--bloque" type="button" data-contacto-ver>
-            <%- include('../partials/icono', { n: 'ojo' }) %> <%= yaConsulto ? 'Volver a ver el contacto' : 'Ver teléfono y WhatsApp' %>
-          </button>
-          <p class="contacto__nota" style="margin:0"><%- include('../partials/icono', { n: 'info' }) %> Por seguridad, cada consulta del contacto queda registrada.</p>
+          <div data-contacto-datos hidden></div>
+          <button type="button" class="amarillo" data-contacto-ver><%= yaConsulto ? 'ver el contacto otra vez' : 'ver teléfono y WhatsApp' %></button>
+          <p class="chico gris" style="margin:6px 0 0">Cada consulta del contacto queda registrada.</p>
         <% } %>
-      </section>
+      </div>
     <% } %>
 
-    <section>
-      <h2 style="font-size:1.15rem">Descripción</h2>
-      <p class="descripcion"><%= pub.descripcion %></p>
-    </section>
+    <h3>Descripción</h3>
+    <p class="descripcion"><%= pub.descripcion %></p>
+
+    <% if (usuario && !esDueno && pub.estado === 'publicada') { %>
+      <hr>
+      <% if (esAdmin) { %>
+        <form action="/publicaciones/<%= pub.id %>/ocultar" method="post">
+          <small class="gris">admin: si la IA dejó pasar algo prohibido, ocúltala y mándala a revisión.</small><br>
+          <input name="detalle" maxlength="300" placeholder="nota (opcional)" style="width:60%">
+          <button type="submit" class="rojo">ocultar y revisar</button>
+        </form>
+      <% } else { %>
+        <details>
+          <summary class="chico" style="cursor:pointer;color:#8a8a8a">reportar esta publicación</summary>
+          <form action="/publicaciones/<%= pub.id %>/reportar" method="post" style="margin-top:6px">
+            <select name="motivo" required>
+              <% Object.entries(motivos).forEach(([k, v]) => { %><option value="<%= k %>"><%= v %></option><% }) %>
+            </select><br>
+            <input name="detalle" maxlength="300" placeholder="detalle (opcional)" style="width:100%;margin:6px 0">
+            <button type="submit">enviar reporte</button>
+          </form>
+        </details>
+      <% } %>
+    <% } %>
   </div>
-</article>
+</div>
 
 <% if (otras.length) { %>
-  <section class="seccion">
-    <div class="seccion__cab">
-      <h2 style="margin:0">Más de <%= pub.vendedor.split(' ')[0] %></h2>
-      <a href="/usuarios/<%= pub.usuario_id %>">Ver perfil</a>
-    </div>
-    <div class="rejilla">
-      <% otras.forEach(p => { %><%- include('../partials/tarjeta', { p }) %><% }) %>
-    </div>
-  </section>
+  <hr>
+  <h2>Más de <%= pub.vendedor.split(' ')[0] %></h2>
+  <div class="lista">
+    <% otras.forEach(p => { %><%- include('../partials/tarjeta', { p }) %><% }) %>
+  </div>
 <% } %>
 
 <%- include('../partials/foot') %>

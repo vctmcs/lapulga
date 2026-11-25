@@ -4,6 +4,7 @@ const Publicacion = require('../models/publicacionModel');
 const Categoria = require('../models/categoriaModel');
 const validar = require('../utils/validacion');
 const formato = require('../utils/formato');
+const Moderacion = require('../models/moderacionModel');
 const { analizarPublicacion } = require('../services/moderacion');
 const { MAX_IMAGENES } = require('../middleware/upload');
 
@@ -48,16 +49,26 @@ async function renderForm(res, { pub = null, valores, errores = {}, imagenes = [
   });
 }
 
-// Pasa la publicación por la moderación; si queda marcada, la oculta y suspende el permiso de publicar.
-// (En la Entrega 2 aquí también se guardan los hallazgos en reportes_ia.)
-async function moderar(pub, usuario) {
+// Pasa la publicación por los filtros de IA; si queda marcada se guarda el reporte,
+// se oculta y el usuario no puede publicar hasta que el administrador decida.
+async function moderar(pub) {
   const imagenes = (await Publicacion.imagenes(pub.id)).map((i) => i.ruta);
   const resultado = await analizarPublicacion({ titulo: pub.titulo, descripcion: pub.descripcion, imagenes });
   if (resultado.marcada) {
-    await Publicacion.cambiarEstado(pub.id, 'en_revision');
+    await Moderacion.marcarPorIA(pub.id, pub.usuario_id, resultado.hallazgos);
   }
   return resultado;
 }
+
+const MOTIVOS = {
+  armas: 'Armas o municiones',
+  drogas: 'Drogas o medicamentos controlados',
+  servicios_sexuales: 'Contenido o servicios sexuales',
+  trata_de_personas: 'Venta de personas u órganos',
+  otros_ilicitos: 'Robado, falsificado u otro ilícito',
+  fraude: 'Parece fraude o precio falso',
+  otro: 'Otro motivo',
+};
 
 module.exports = {
   // ---------- Públicas ----------
@@ -100,6 +111,7 @@ module.exports = {
       otras: otras.filter((o) => o.id !== pub.id).slice(0, 4),
       esDueno,
       yaConsulto,
+      motivos: MOTIVOS,
     });
   },
 
@@ -158,7 +170,7 @@ module.exports = {
 
     const pub = await Publicacion.crear({ ...datos, usuarioId: req.usuario.id });
     await Publicacion.agregarImagenes(pub.id, subidas);
-    const mod = await moderar(pub, req.usuario);
+    const mod = await moderar(pub);
 
     if (mod.marcada) {
       req.flash('alerta', 'Tu publicación fue reportada por el sistema y quedó oculta en revisión. No podrás publicar hasta que el administrador la revise.');
@@ -171,8 +183,10 @@ module.exports = {
   async editar(req, res) {
     const pub = await propiaOFalla(req, res);
     if (!pub) return;
-    if (pub.estado === 'en_revision') {
-      req.flash('error', 'No puedes editar una publicación mientras está en revisión.');
+    if (pub.estado === 'en_revision' || pub.estado === 'rechazada') {
+      req.flash('error', pub.estado === 'rechazada'
+        ? 'Esta publicación fue rechazada por moderación y ya no se puede editar.'
+        : 'No puedes editar una publicación mientras está en revisión.');
       return res.redirect('/mis-publicaciones');
     }
     await renderForm(res, {
@@ -191,9 +205,9 @@ module.exports = {
     const subidas = nombresSubidos(req);
     const pub = await propiaOFalla(req, res);
     if (!pub) return borrarArchivos(subidas);
-    if (pub.estado === 'en_revision') {
+    if (pub.estado === 'en_revision' || pub.estado === 'rechazada') {
       await borrarArchivos(subidas);
-      req.flash('error', 'No puedes editar una publicación mientras está en revisión.');
+      req.flash('error', 'Esta publicación no se puede editar en su estado actual.');
       return res.redirect('/mis-publicaciones');
     }
 
@@ -216,9 +230,8 @@ module.exports = {
     await borrarArchivos(borradas);
     await Publicacion.agregarImagenes(pub.id, subidas);
 
-    // Una edición vuelve a pasar por la moderación (si estaba rechazada, intenta publicarse de nuevo)
-    if (actualizada.estado === 'rechazada') await Publicacion.cambiarEstado(pub.id, 'publicada');
-    const mod = await moderar(actualizada, req.usuario);
+    // Toda edición vuelve a pasar por la moderación
+    const mod = await moderar(actualizada);
     if (mod.marcada) {
       req.flash('alerta', 'Tu publicación fue reportada por el sistema y quedó oculta en revisión.');
       return res.redirect('/mis-publicaciones');
@@ -251,5 +264,30 @@ module.exports = {
     await Publicacion.cambiarEstado(pub.id, 'eliminada');
     req.flash('ok', 'Publicación eliminada.');
     res.redirect('/mis-publicaciones');
+  },
+
+  // ---------- Reportes ----------
+  // Cualquier usuario con sesión puede reportar; la publicación sigue visible hasta que el admin decida
+  async reportar(req, res) {
+    const id = Number(req.params.id);
+    const pub = Number.isInteger(id) ? await Publicacion.porId(id) : null;
+    if (!pub || pub.estado !== 'publicada') return noEncontrada(res);
+    if (pub.usuario_id === req.usuario.id) return res.redirect(`/publicaciones/${id}`);
+
+    const clave = MOTIVOS[req.body.motivo] ? req.body.motivo : 'otro';
+    const texto = String(req.body.detalle || '').trim().slice(0, 300);
+    const nuevo = await Moderacion.reportarPorUsuario(id, req.usuario.id, { etiqueta: clave, texto });
+    req.flash(nuevo ? 'ok' : 'info', nuevo ? 'Gracias. El administrador revisará la publicación.' : 'Ya habías reportado esta publicación.');
+    res.redirect(`/publicaciones/${id}`);
+  },
+
+  // El administrador oculta y manda a revisión algo que la IA no detectó
+  async ocultar(req, res) {
+    const id = Number(req.params.id);
+    const pub = Number.isInteger(id) ? await Publicacion.porId(id) : null;
+    if (!pub || pub.estado !== 'publicada') return noEncontrada(res);
+    await Moderacion.ocultarPorAdmin(id, req.usuario.id, String(req.body.detalle || '').trim().slice(0, 300));
+    req.flash('ok', 'Publicación ocultada y enviada a la cola de revisión.');
+    res.redirect('/admin');
   },
 };

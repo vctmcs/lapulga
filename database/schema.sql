@@ -45,11 +45,11 @@ CREATE TABLE IF NOT EXISTS imagenes (
   orden           SMALLINT     NOT NULL DEFAULT 0
 );
 
--- Resultado de cada filtro de IA (se usa a partir de la Entrega 2)
+-- Resultado de cada filtro de IA y reportes manuales (usuario/admin) para medir falsos negativos
 CREATE TABLE IF NOT EXISTS reportes_ia (
   id              SERIAL PRIMARY KEY,
   publicacion_id  INTEGER      NOT NULL REFERENCES publicaciones(id) ON DELETE CASCADE,
-  filtro          VARCHAR(20)  NOT NULL CHECK (filtro IN ('terminos', 'texto_zero_shot', 'imagen_nsfw')),
+  filtro          VARCHAR(20)  NOT NULL CHECK (filtro IN ('terminos', 'texto_zero_shot', 'imagen_nsfw', 'usuario', 'manual')),
   etiqueta        VARCHAR(80)  NOT NULL,
   puntaje         NUMERIC(5,4) NOT NULL DEFAULT 0,
   decision_admin  VARCHAR(12)  CHECK (decision_admin IN ('confirmada', 'descartada')),
@@ -82,3 +82,11 @@ CREATE TABLE IF NOT EXISTS resenas (
   CONSTRAINT resena_unica UNIQUE (autor_id, receptor_id, publicacion_id),
   CONSTRAINT resena_no_propia CHECK (autor_id <> receptor_id)
 );
+
+-- ===== Entrega 2: ajustes sobre bases creadas con la Entrega 1 =====
+ALTER TABLE reportes_ia DROP CONSTRAINT IF EXISTS reportes_ia_filtro_check;
+ALTER TABLE reportes_ia ADD CONSTRAINT reportes_ia_filtro_check
+  CHECK (filtro IN ('terminos', 'texto_zero_shot', 'imagen_nsfw', 'usuario', 'manual'));
+ALTER TABLE reportes_ia ADD COLUMN IF NOT EXISTS reportado_por INTEGER REFERENCES usuarios(id) ON DELETE SET NULL;
+ALTER TABLE reportes_ia ADD COLUMN IF NOT EXISTS motivo VARCHAR(300);
+CREATE INDEX IF NOT EXISTS idx_reportes_pendientes ON reportes_ia(publicacion_id) WHERE decision_admin IS NULL;
